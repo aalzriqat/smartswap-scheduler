@@ -16,7 +16,7 @@ export const API_ENDPOINTS = {
     ME: '/auth/me',
     REFRESH: '/auth/refresh',
   },
-  
+
   // Users
   USERS: {
     BASE: '/users',
@@ -24,7 +24,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
   },
-  
+
   // Schedules & Shifts
   SCHEDULES: {
     USER: (userId: string) => `/schedules/user/${userId}`,
@@ -35,7 +35,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/shifts/${id}`,
     DELETE: (id: string) => `/shifts/${id}`,
   },
-  
+
   // Swap Requests
   SWAPS: {
     BASE: '/swaps',
@@ -44,7 +44,17 @@ export const API_ENDPOINTS = {
     REJECT: (id: string) => `/swaps/${id}/reject`,
     CANCEL: (id: string) => `/swaps/${id}`,
   },
-  
+
+  // Smart Swap Intents
+  SWAP_INTENTS: {
+    BASE: '/swap-intents',
+    ACTIVE: '/swap-intents/active',
+    USER: (userId: string) => `/swap-intents/user/${userId}`,
+    BY_ID: (id: string) => `/swap-intents/${id}`,
+    MATCHES: (id: string) => `/swap-intents/${id}/matches`,
+    PREFERENCES: '/swap-intents/preferences',
+  },
+
   // Analytics
   ANALYTICS: {
     BASE: '/analytics',

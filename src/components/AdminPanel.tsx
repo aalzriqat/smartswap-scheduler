@@ -3,8 +3,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Users, Database, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Settings, Users, Database, Shield, AlertTriangle, CheckCircle, Activity } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useUsers } from '@/hooks/useUsers';
+import { useDashboardStats } from '@/hooks/useDashboard';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface AdminPanelProps {
   userRole: string;
@@ -13,19 +16,53 @@ interface AdminPanelProps {
 export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
   const [activeOperations, setActiveOperations] = useState<string[]>([]);
 
-  const mockUsers = [
-    { id: 1, name: 'Sarah Johnson', role: 'Employee', status: 'Active', lastLogin: '2 hours ago' },
-    { id: 2, name: 'Mike Chen', role: 'Manager', status: 'Active', lastLogin: '1 day ago' },
-    { id: 3, name: 'Alex Rodriguez', role: 'Employee', status: 'Inactive', lastLogin: '1 week ago' },
-    { id: 4, name: 'Emily Davis', role: 'Admin', status: 'Active', lastLogin: '30 minutes ago' },
+  // Real data hooks
+  const { users, isLoading: isLoadingUsers, getUserStats, updateUser, deleteUser, isUpdating, isDeleting } = useUsers();
+  const { dashboardStats, isLoading: isLoadingDashboard } = useDashboardStats();
+  const { analytics, isLoading: isLoadingAnalytics } = useAnalytics();
+
+  // Get real system metrics from analytics and dashboard
+  const systemMetrics = [
+    {
+      name: 'Total Users',
+      value: isLoadingUsers ? '...' : users.length.toString(),
+      status: 'healthy'
+    },
+    {
+      name: 'Active Requests',
+      value: isLoadingDashboard ? '...' : (dashboardStats?.activeRequests?.toString() || '0'),
+      status: 'healthy'
+    },
+    {
+      name: 'AI Confidence',
+      value: isLoadingDashboard ? '...' : `${dashboardStats?.aiConfidence || 0}%`,
+      status: dashboardStats?.aiConfidence && dashboardStats.aiConfidence > 80 ? 'healthy' : 'warning'
+    },
+    {
+      name: 'Success Rate',
+      value: isLoadingAnalytics ? '...' : `${analytics?.systemMetrics?.swapSuccessRate?.toFixed(1) || 0}%`,
+      status: analytics?.systemMetrics?.swapSuccessRate && analytics.systemMetrics.swapSuccessRate > 75 ? 'healthy' : 'warning'
+    },
   ];
 
-  const systemMetrics = [
-    { name: 'Database Size', value: '2.4 GB', status: 'healthy' },
-    { name: 'Active Connections', value: '247', status: 'healthy' },
-    { name: 'Memory Usage', value: '68%', status: 'warning' },
-    { name: 'CPU Usage', value: '34%', status: 'healthy' },
-  ];
+  // Helper function to get user status
+  const getUserStatus = (user: any) => {
+    const lastUpdate = new Date(user.updatedAt);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return lastUpdate >= thirtyDaysAgo ? 'Active' : 'Inactive';
+  };
+
+  // Helper function to format last login
+  const getLastLogin = (user: any) => {
+    const lastUpdate = new Date(user.updatedAt);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) return 'Less than 1 hour ago';
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  };
 
   const handleOperation = (operation: string) => {
     setActiveOperations([...activeOperations, operation]);
@@ -45,7 +82,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
     }
   };
 
-  if (userRole !== 'Admin' && userRole !== 'Developer') {
+  if (userRole !== 'WorkFlowManagement' && userRole !== 'Developer') {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <Card className="text-center">
@@ -89,8 +126,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">247</div>
-                <p className="text-blue-100">+12 this month</p>
+                <div className="text-3xl font-bold">
+                  {isLoadingUsers ? '...' : users.length}
+                </div>
+                <p className="text-blue-100">
+                  {getUserStats ? `${getUserStats.activeUsers} active` : 'Real user data'}
+                </p>
               </CardContent>
             </Card>
 
@@ -102,18 +143,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">99.1%</div>
-                <p className="text-green-100">All systems operational</p>
+                <div className="text-3xl font-bold">
+                  {isLoadingDashboard ? '...' : `${dashboardStats?.aiConfidence || 0}%`}
+                </div>
+                <p className="text-green-100">AI Confidence Level</p>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
               <CardHeader>
-                <CardTitle className="text-white">Active Sessions</CardTitle>
+                <CardTitle className="text-white">Active Requests</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">156</div>
-                <p className="text-purple-100">Peak: 203 today</p>
+                <div className="text-3xl font-bold">
+                  {isLoadingDashboard ? '...' : (dashboardStats?.activeRequests || 0)}
+                </div>
+                <p className="text-purple-100">Active Swap Requests</p>
               </CardContent>
             </Card>
           </div>
@@ -156,28 +201,50 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Users className="h-5 w-5 text-blue-600" />
+                {isLoadingUsers ? (
+                  <div className="text-center py-8 text-gray-500">Loading users...</div>
+                ) : users.length > 0 ? (
+                  users.slice(0, 10).map((user) => (
+                    <div key={user._id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Users className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {user.firstName} {user.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {user.email} • Last activity: {getLastLogin(user)}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">Last login: {user.lastLogin}</div>
+                      <div className="flex items-center space-x-3">
+                        <Badge variant="outline">{user.role}</Badge>
+                        <Badge variant="outline">{user.marketplace}</Badge>
+                        <Badge className={getStatusColor(getUserStatus(user))}>
+                          {getUserStatus(user)}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isUpdating || isDeleting}
+                        >
+                          Edit
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge variant="outline">{user.role}</Badge>
-                      <Badge className={getStatusColor(user.status)}>
-                        {user.status}
-                      </Badge>
-                      <Button size="sm" variant="outline">
-                        Edit
-                      </Button>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">No users found</div>
+                )}
+                {users.length > 10 && (
+                  <div className="text-center pt-4">
+                    <p className="text-sm text-gray-500">
+                      Showing 10 of {users.length} users
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -237,8 +304,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
                       <h4 className="font-medium text-gray-900">{item.label}</h4>
                       <p className="text-sm text-gray-600">{item.description}</p>
                     </div>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => handleOperation(item.action)}
                       disabled={activeOperations.includes(item.action)}
                       className="w-full"
