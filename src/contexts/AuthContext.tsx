@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '@/services/api';
 import { User } from '@/types/api';
@@ -7,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isLoggingIn: boolean;
+  isRegistering: boolean;
   isAuthenticated: boolean;
   login: (data: { email: string; password: string }, options?: { onError?: (error: Error) => void }) => Promise<void>;
   register: (userData: Partial<User>) => Promise<void>;
@@ -32,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   const { toast } = useToast();
 
   // Check authentication status on mount
@@ -84,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (userData: Partial<User>) => {
+    setIsRegistering(true);
     try {
       const response = await authApi.register(userData);
       localStorage.setItem('authToken', response.data.token);
@@ -99,6 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: 'destructive',
       });
       throw error;
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -135,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isLoading,
     isLoggingIn,
+    isRegistering,
     isAuthenticated,
     login,
     register,

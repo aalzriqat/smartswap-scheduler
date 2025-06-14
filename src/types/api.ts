@@ -16,6 +16,7 @@ export interface User {
   role: 'Employee' | 'Manager' | 'WorkFlowManagement' | 'Developer';
   skills: string[];
   marketplace: string;
+  userLogin?: string; // Added optional userLogin property
   createdAt: string;
   updatedAt: string;
 }
@@ -99,6 +100,7 @@ export interface UserPreferences {
 }
 
 export interface SmartMatch {
+  _id: string; // Added missing _id property
   id: string;
   requesterIntentId: string;
   targetIntentId: string;
@@ -106,6 +108,7 @@ export interface SmartMatch {
   compatibility: 'Perfect Match' | 'High Match' | 'Good Match' | 'Fair Match';
   factors: MatchFactor[];
   reason: string;
+  status: 'pending' | 'accepted' | 'rejected'; // Added status property
   calculatedAt: string;
   expiresAt: string;
 }

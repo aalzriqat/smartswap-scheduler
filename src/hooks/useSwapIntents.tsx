@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { swapIntentApi } from '@/services/api';
 import { SwapIntent, SmartMatchResult, UserPreferences } from '@/types/api';
@@ -105,7 +106,8 @@ export const useSwapIntents = (userId?: string) => {
     activeIntents: activeIntents || [],
     allActiveIntents: allActiveIntents || [],
 
-    // Loading states
+    // Loading states - use consistent naming
+    isLoading: isLoadingIntents,
     isLoadingIntents,
     isLoadingActive,
     isLoadingAllActive,

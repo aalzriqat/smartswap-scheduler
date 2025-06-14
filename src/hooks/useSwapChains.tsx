@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { swapChainApi } from '@/services/api';
 import { SwapChain, ChainDetectionOptions } from '@/types/api';
@@ -174,9 +175,9 @@ export const useSwapChain = (chainId?: string) => {
       return response.success ? response.data : null;
     },
     enabled: !!chainId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Refetch every 2 seconds if chain is executing
-      return data?.status === 'executing' ? 2000 : false;
+      return query.state.data?.status === 'executing' ? 2000 : false;
     },
   });
 
