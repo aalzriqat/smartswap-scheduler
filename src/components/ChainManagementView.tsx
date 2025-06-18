@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ export const ChainManagementView: React.FC = () => {
   const [selectedChain, setSelectedChain] = useState<SwapChain | null>(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   
   const { 
     userChains, 
@@ -70,10 +71,10 @@ export const ChainManagementView: React.FC = () => {
   };
 
   const canExecuteChain = (chain: SwapChain) => {
-    if (!user) return false;
+    if (!user || !userProfile) return false;
     
-    const isInitiator = chain.initiatorUserId === user._id;
-    const isAdmin = ['WorkFlowManagement', 'Developer', 'Manager'].includes(user.role);
+    const isInitiator = chain.initiatorUserId === userProfile.id;
+    const isAdmin = ['WorkFlowManagement', 'Developer', 'Manager'].includes(userProfile.role);
     const isFullyApproved = chain.participants.every(p => p.approvalStatus === 'approved');
     const isApproved = chain.status === 'approved';
     

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -32,11 +33,11 @@ export const ChainApprovalModal: React.FC<ChainApprovalModalProps> = ({
   const [reason, setReason] = useState('');
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
   const { approveChain, rejectChain, isApproving, isRejecting } = useSwapChains();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
 
-  if (!chain || !user) return null;
+  if (!chain || !user || !userProfile) return null;
 
-  const userParticipant = chain.participants.find(p => p.userId === user._id);
+  const userParticipant = chain.participants.find(p => p.userId === userProfile.id);
   const canRespond = userParticipant?.approvalStatus === 'pending' && 
                     (chain.status === 'proposed' || chain.status === 'pending');
 
@@ -55,8 +56,8 @@ export const ChainApprovalModal: React.FC<ChainApprovalModalProps> = ({
   const getImpactDescription = () => {
     if (!userParticipant) return '';
     
-    const userStep = chain.swapSteps.find(step => step.fromUserId === user._id);
-    const receivingStep = chain.swapSteps.find(step => step.toUserId === user._id);
+    const userStep = chain.swapSteps.find(step => step.fromUserId === userProfile.id);
+    const receivingStep = chain.swapSteps.find(step => step.toUserId === userProfile.id);
     
     if (userStep && receivingStep) {
       return `You will give up your shift and receive a new shift as part of this ${chain.participants.length}-person swap chain.`;

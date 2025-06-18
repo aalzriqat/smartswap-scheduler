@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,7 @@ const skillOptions = [
 ];
 
 export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { preferences, updatePreferences, isUpdating } = useUserPreferences();
 
   const [formData, setFormData] = useState({
@@ -64,12 +63,12 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
 
   // Initialize form data when user or preferences change
   useEffect(() => {
-    if (user) {
+    if (userProfile) {
       setFormData(prev => ({
         ...prev,
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
+        firstName: userProfile.first_name || '',
+        lastName: userProfile.last_name || '',
+        email: userProfile.email || '',
       }));
     }
 
@@ -86,7 +85,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
         smsNotifications: preferences.notificationSettings.sms,
       }));
     }
-  }, [user, preferences]);
+  }, [userProfile, preferences]);
 
   const handleTimeSlotToggle = (timeSlot: TimeSlot) => {
     setFormData(prev => ({
@@ -132,7 +131,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
     }
   };
 
-  if (!user) return null;
+  if (!user || !userProfile) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -190,8 +189,8 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
                 />
               </div>
               <div className="flex items-center space-x-2">
-                <Badge variant="outline">Role: {user.role}</Badge>
-                <Badge variant="outline">Marketplace: {user.marketplace}</Badge>
+                <Badge variant="outline">Role: {userProfile.role}</Badge>
+                <Badge variant="outline">Marketplace: {userProfile.marketplace}</Badge>
               </div>
             </CardContent>
           </Card>

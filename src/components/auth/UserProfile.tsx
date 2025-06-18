@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,10 @@ import { User, LogOut, Settings, Shield, MapPin, Briefcase } from 'lucide-react'
 import { UserSettings } from './UserSettings';
 
 export const UserProfile: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  if (!user) return null;
+  if (!user || !userProfile) return null;
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -55,7 +56,7 @@ export const UserProfile: React.FC = () => {
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10">
               <AvatarFallback className="bg-blue-600 text-white">
-                {getInitials(user.firstName, user.lastName)}
+                {getInitials(userProfile.first_name, userProfile.last_name)}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -66,35 +67,35 @@ export const UserProfile: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback className="bg-blue-600 text-white text-lg">
-                    {getInitials(user.firstName, user.lastName)}
+                    {getInitials(userProfile.first_name, userProfile.last_name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
                   <p className="text-sm font-medium leading-none">
-                    {user.firstName} {user.lastName}
+                    {userProfile.first_name} {userProfile.last_name}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground mt-1">
-                    {user.email}
+                    {userProfile.email}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Badge className={getRoleColor(user.role)}>
+                <Badge className={getRoleColor(userProfile.role)}>
                   <Shield className="h-3 w-3 mr-1" />
-                  {getRoleDisplayName(user.role)}
+                  {getRoleDisplayName(userProfile.role)}
                 </Badge>
                 <Badge variant="outline">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {user.marketplace}
+                  {userProfile.marketplace}
                 </Badge>
               </div>
 
-              {user.skills && user.skills.length > 0 && (
+              {userProfile.skills && userProfile.skills.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Skills:</p>
                   <div className="flex flex-wrap gap-1">
-                    {user.skills.map((skill, index) => (
+                    {userProfile.skills.map((skill, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
                         <Briefcase className="h-2 w-2 mr-1" />
                         {skill}
@@ -140,9 +141,9 @@ export const UserProfile: React.FC = () => {
 
 // Compact version for mobile or smaller spaces
 export const UserProfileCompact: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
 
-  if (!user) return null;
+  if (!user || !userProfile) return null;
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -152,15 +153,15 @@ export const UserProfileCompact: React.FC = () => {
     <div className="flex items-center space-x-3">
       <Avatar className="h-8 w-8">
         <AvatarFallback className="bg-blue-600 text-white text-sm">
-          {getInitials(user.firstName, user.lastName)}
+          {getInitials(userProfile.first_name, userProfile.last_name)}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">
-          {user.firstName} {user.lastName}
+          {userProfile.first_name} {userProfile.last_name}
         </p>
         <p className="text-xs text-gray-500 truncate">
-          {user.role} • {user.marketplace}
+          {userProfile.role} • {userProfile.marketplace}
         </p>
       </div>
       <Button

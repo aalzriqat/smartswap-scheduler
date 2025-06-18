@@ -1,228 +1,239 @@
-
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { swapIntentApi } from '@/services/api';
-import { SwapIntent, SmartMatchResult, UserPreferences } from '@/types/api';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { SwapIntent, UserPreferences } from '@/types/api';
+import { useToast } from '@/hooks/use-toast';
 
-export const useSwapIntents = (userId?: string) => {
+export const useSwapIntents = () => {
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const targetUserId = userId || user?._id;
 
   // Get user's swap intents
-  const { data: swapIntents, isLoading: isLoadingIntents } = useQuery({
-    queryKey: ['swapIntents', targetUserId],
+  const {
+    data: swapIntents = [],
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ['swapIntents', userProfile?.id],
     queryFn: async () => {
-      if (!targetUserId) return [];
-      const response = await swapIntentApi.getUserSwapIntents(targetUserId);
-      return response.success ? response.data : [];
+      if (!userProfile?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('swap_intents')
+        .select('*')
+        .eq('user_id', userProfile.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as SwapIntent[];
     },
-    enabled: !!targetUserId,
+    enabled: !!userProfile?.id,
   });
 
-  // Get active swap intents
-  const { data: activeIntents, isLoading: isLoadingActive } = useQuery({
-    queryKey: ['swapIntents', targetUserId, 'active'],
-    queryFn: async () => {
-      if (!targetUserId) return [];
-      const response = await swapIntentApi.getUserSwapIntents(targetUserId, 'active');
-      return response.success ? response.data : [];
-    },
-    enabled: !!targetUserId,
-  });
-
-  // Get all active intents (for browsing)
-  const { data: allActiveIntents, isLoading: isLoadingAllActive } = useQuery({
-    queryKey: ['swapIntents', 'all-active'],
-    queryFn: async () => {
-      const response = await swapIntentApi.getActiveSwapIntents();
-      return response.success ? response.data : [];
-    },
-  });
-
-  // Create swap intent mutation
+  // Create a new swap intent
   const createSwapIntentMutation = useMutation({
-    mutationFn: (intentData: Partial<SwapIntent>) => swapIntentApi.createSwapIntent(intentData),
+    mutationFn: async (newIntent: Omit<SwapIntent, '_id' | 'createdAt' | 'updatedAt'>) => {
+      const { data, error } = await supabase
+        .from('swap_intents')
+        .insert([newIntent])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating swap intent:', error);
+        throw error;
+      }
+      return data as SwapIntent;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['swapIntents'] });
+      queryClient.invalidateQueries(['swapIntents', userProfile?.id]);
       toast({
         title: 'Swap intent created',
-        description: 'Your swap intent has been created successfully.',
+        description: 'Your swap intent has been successfully created.',
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
-        title: 'Failed to create swap intent',
-        description: error.message,
+        title: 'Error creating swap intent',
+        description: error.message || 'An error occurred while creating the swap intent.',
         variant: 'destructive',
       });
     },
   });
 
-  // Update swap intent mutation
+  // Update an existing swap intent
   const updateSwapIntentMutation = useMutation({
-    mutationFn: ({ intentId, updates }: { intentId: string; updates: Partial<SwapIntent> }) =>
-      swapIntentApi.updateSwapIntent(intentId, updates),
+    mutationFn: async (updatedIntent: SwapIntent) => {
+      const { data, error } = await supabase
+        .from('swap_intents')
+        .update(updatedIntent)
+        .eq('id', updatedIntent.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating swap intent:', error);
+        throw error;
+      }
+      return data as SwapIntent;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['swapIntents'] });
+      queryClient.invalidateQueries(['swapIntents', userProfile?.id]);
       toast({
         title: 'Swap intent updated',
-        description: 'Your swap intent has been updated successfully.',
+        description: 'Your swap intent has been successfully updated.',
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
-        title: 'Failed to update swap intent',
-        description: error.message,
+        title: 'Error updating swap intent',
+        description: error.message || 'An error occurred while updating the swap intent.',
         variant: 'destructive',
       });
     },
   });
 
-  // Cancel swap intent mutation
-  const cancelSwapIntentMutation = useMutation({
-    mutationFn: (intentId: string) => swapIntentApi.cancelSwapIntent(intentId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['swapIntents'] });
-      toast({
-        title: 'Swap intent cancelled',
-        description: 'Your swap intent has been cancelled.',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Failed to cancel swap intent',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  return {
-    // Data
-    swapIntents: swapIntents || [],
-    activeIntents: activeIntents || [],
-    allActiveIntents: allActiveIntents || [],
-
-    // Loading states - use consistent naming
-    isLoading: isLoadingIntents,
-    isLoadingIntents,
-    isLoadingActive,
-    isLoadingAllActive,
-
-    // Mutations
-    createSwapIntent: createSwapIntentMutation.mutate,
-    updateSwapIntent: updateSwapIntentMutation.mutate,
-    cancelSwapIntent: cancelSwapIntentMutation.mutate,
-
-    // Mutation states
-    isCreating: createSwapIntentMutation.isPending,
-    isUpdating: updateSwapIntentMutation.isPending,
-    isCancelling: cancelSwapIntentMutation.isPending,
-  };
-};
-
-export const useSmartMatches = (intentId?: string) => {
-  const { toast } = useToast();
-
-  // Get smart matches for an intent
-  const { data: matchResult, isLoading, refetch } = useQuery({
-    queryKey: ['smartMatches', intentId],
-    queryFn: async () => {
-      if (!intentId) return null;
-      const response = await swapIntentApi.findSmartMatches(intentId);
-      return response.success ? response.data : null;
-    },
-    enabled: !!intentId,
-  });
-
-  // Find matches mutation (for manual refresh)
-  const findMatchesMutation = useMutation({
-    mutationFn: (targetIntentId: string) => swapIntentApi.findSmartMatches(targetIntentId),
-    onSuccess: (response) => {
-      if (response.success) {
-        const matchCount = response.data.matches.length;
-        toast({
-          title: 'Search complete',
-          description: matchCount > 0
-            ? `Found ${matchCount} potential matches.`
-            : 'Found 0 potential matches.',
-        });
+  // Delete a swap intent
+  const deleteSwapIntentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('swap_intents')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting swap intent:', error);
+        throw error;
       }
+      return data;
     },
-    onError: (error: Error) => {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['swapIntents', userProfile?.id]);
       toast({
-        title: 'Search failed',
-        description: error.message,
+        title: 'Swap intent deleted',
+        description: 'Your swap intent has been successfully deleted.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error deleting swap intent',
+        description: error.message || 'An error occurred while deleting the swap intent.',
         variant: 'destructive',
       });
     },
   });
 
   return {
-    // Data
-    matches: matchResult?.matches || [],
-    totalMatches: matchResult?.totalMatches || 0,
-    searchedAt: matchResult?.searchedAt,
-
-    // Loading state
+    swapIntents,
     isLoading,
-
-    // Actions
-    refetch,
-    findMatches: findMatchesMutation.mutate,
-
-    // Mutation state
-    isSearching: findMatchesMutation.isPending,
+    error,
+    createSwapIntent: createSwapIntentMutation.mutateAsync,
+    updateSwapIntent: updateSwapIntentMutation.mutateAsync,
+    deleteSwapIntent: deleteSwapIntentMutation.mutateAsync,
+    isCreating: createSwapIntentMutation.isLoading,
+    isUpdating: updateSwapIntentMutation.isLoading,
+    isDeleting: deleteSwapIntentMutation.isLoading,
   };
 };
 
 export const useUserPreferences = () => {
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Get user preferences
-  const { data: preferences, isLoading } = useQuery({
-    queryKey: ['userPreferences'],
+  const {
+    data: preferences = null,
+    isLoading: isLoadingPreferences,
+    error: preferencesError
+  } = useQuery({
+    queryKey: ['userPreferences', userProfile?.id],
     queryFn: async () => {
-      const response = await swapIntentApi.getUserPreferences();
-      return response.success ? response.data : null;
+      if (!userProfile?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', userProfile.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user preferences:', error);
+        return null;
+      }
+      return data as UserPreferences;
     },
+    enabled: !!userProfile?.id,
   });
 
-  // Update preferences mutation
+  // Create user preferences if they don't exist
+  useEffect(() => {
+    if (userProfile?.id && !preferences && !isLoadingPreferences && !preferencesError) {
+      const createUserPreferences = async () => {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .insert([{ user_id: userProfile.id, autoMatchEnabled: true }])
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Error creating user preferences:', error);
+          toast({
+            title: 'Error creating user preferences',
+            description: error.message || 'An error occurred while creating user preferences.',
+            variant: 'destructive',
+          });
+        } else {
+          queryClient.invalidateQueries(['userPreferences', userProfile.id]);
+        }
+      };
+      createUserPreferences();
+    }
+  }, [userProfile, preferences, isLoadingPreferences, preferencesError, queryClient, toast]);
+
+  // Update user preferences
   const updatePreferencesMutation = useMutation({
-    mutationFn: (updates: Partial<UserPreferences>) =>
-      swapIntentApi.updateUserPreferences(updates),
+    mutationFn: async (updatedPreferences: Partial<UserPreferences>) => {
+      if (!preferences) {
+        throw new Error('User preferences not loaded.');
+      }
+      
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .update(updatedPreferences)
+        .eq('user_id', userProfile?.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating user preferences:', error);
+        throw error;
+      }
+      return data as UserPreferences;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userPreferences'] });
+      queryClient.invalidateQueries(['userPreferences', userProfile?.id]);
       toast({
-        title: 'Preferences updated',
-        description: 'Your matching preferences have been saved.',
+        title: 'User preferences updated',
+        description: 'Your user preferences have been successfully updated.',
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
-        title: 'Failed to update preferences',
-        description: error.message,
+        title: 'Error updating user preferences',
+        description: error.message || 'An error occurred while updating user preferences.',
         variant: 'destructive',
       });
     },
   });
 
   return {
-    // Data
     preferences,
-
-    // Loading state
-    isLoading,
-
-    // Actions
-    updatePreferences: updatePreferencesMutation.mutate,
-
-    // Mutation state
-    isUpdating: updatePreferencesMutation.isPending,
+    isLoading: isLoadingPreferences,
+    error: preferencesError,
+    updatePreferences: updatePreferencesMutation.mutateAsync,
+    isUpdating: updatePreferencesMutation.isLoading,
   };
 };

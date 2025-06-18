@@ -1,271 +1,252 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, TrendingUp, Users, Zap, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CalendarDays, Users, TrendingUp, Clock, CheckCircle, AlertTriangle, BarChart3 } from 'lucide-react';
+import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/contexts/AuthContext';
-import { useDashboardStats } from '@/hooks/useDashboard';
-import { useRealSchedule } from '@/hooks/useRealSchedule';
-import { useSwapIntents } from '@/hooks/useSwapIntents';
+import { CreateSwapIntentModal } from './CreateSwapIntentModal';
+import { SmartMatchView } from './SmartMatchView';
+import { MultiHopMatchView } from './MultiHopMatchView';
+import { ScheduleView } from './ScheduleView';
+import { ChainManagementView } from './ChainManagementView';
 
-interface DashboardProps {
-  userRole: string;
-}
+export const Dashboard: React.FC = () => {
+  const { user, userProfile } = useAuth();
+  const { dashboardStats, isLoading } = useDashboard();
+  const [activeView, setActiveView] = React.useState<'dashboard' | 'schedule' | 'smart-match' | 'multi-hop' | 'chains'>('dashboard');
+  const [isCreateIntentOpen, setIsCreateIntentOpen] = React.useState(false);
 
-export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
-  const { user } = useAuth();
-  const { dashboardStats, isLoading: isLoadingDashboard } = useDashboardStats();
-  const { weeklySchedule, isLoading: isLoadingSchedule } = useRealSchedule();
-  const { activeIntents, isLoading: isLoadingIntents } = useSwapIntents();
+  if (!user || !userProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Loading...</h2>
+          <p className="text-gray-600">Please wait while we load your dashboard.</p>
+        </div>
+      </div>
+    );
+  }
 
-  const getWelcomeMessage = () => {
-    switch (userRole) {
-      case 'WorkFlowManagement':
-        return 'Welcome to your administrative dashboard. Monitor system performance and manage users.';
-      case 'Manager':
-        return 'Welcome to your management dashboard. Oversee schedules and team performance.';
-      case 'Developer':
-        return 'Welcome to the developer console. Access system tools and analytics.';
-      default:
-        return 'Welcome to SmartSwap! Manage your shifts and find swap opportunities.';
+  const renderWelcomeMessage = () => {
+    const timeOfDay = new Date().getHours();
+    let greeting = 'Good morning';
+    
+    if (timeOfDay >= 12 && timeOfDay < 17) {
+      greeting = 'Good afternoon';
+    } else if (timeOfDay >= 17) {
+      greeting = 'Good evening';
     }
+
+    return (
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {greeting}, {userProfile.first_name}! 👋
+        </h1>
+        <p className="text-gray-600">
+          Welcome to your SmartSwap dashboard. Manage your shift swaps and discover new opportunities.
+        </p>
+      </div>
+    );
   };
-
-  // Get next shift from real schedule data
-  const getNextShift = () => {
-    if (!weeklySchedule || isLoadingSchedule) return 'Loading...';
-
-    const today = new Date();
-    const nextShift = weeklySchedule.find(day => {
-      const dayDate = new Date(day.date);
-      return dayDate >= today && day.shift && day.shift.working;
-    });
-
-    if (nextShift?.shift) {
-      const dayName = nextShift.day;
-      const startTime = nextShift.shift.shiftStart;
-      return `${dayName} ${startTime}`;
-    }
-    return 'No upcoming shifts';
-  };
-
-  // Calculate user's weekly hours from real schedule
-  const getWeeklyHours = () => {
-    if (!weeklySchedule || isLoadingSchedule) return 'Loading...';
-
-    let totalHours = 0;
-    weeklySchedule.forEach(day => {
-      if (day.shift?.working && day.shift.shiftStart && day.shift.shiftEnd) {
-        const start = new Date(`2000-01-01 ${day.shift.shiftStart}`);
-        const end = new Date(`2000-01-01 ${day.shift.shiftEnd}`);
-        const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-        totalHours += hours;
-      }
-    });
-
-    return totalHours > 0 ? `${totalHours.toFixed(1)}` : '0';
-  };
-
-  const getStatsCards = () => {
-    if (userRole === 'Employee') {
-      return [
-        {
-          title: 'Your Next Shift',
-          value: getNextShift(),
-          icon: Clock,
-          trend: null
-        },
-        {
-          title: 'Available Swaps',
-          value: isLoadingDashboard ? '...' : (dashboardStats?.activeRequests?.toString() || '0'),
-          icon: Zap,
-          trend: isLoadingDashboard ? null : `${dashboardStats?.trends?.activeRequestsChange >= 0 ? '+' : ''}${dashboardStats?.trends?.activeRequestsChange || 0} today`
-        },
-        {
-          title: 'Hours This Week',
-          value: getWeeklyHours(),
-          icon: Calendar,
-          trend: null
-        },
-        {
-          title: 'Your Active Intents',
-          value: isLoadingIntents ? '...' : activeIntents.length.toString(),
-          icon: TrendingUp,
-          trend: activeIntents.length > 0 ? 'Searching for matches' : 'Create an intent to start'
-        },
-      ];
-    } else {
-      return [
-        {
-          title: 'Active Employees',
-          value: isLoadingDashboard ? '...' : '191', // From real schedule data
-          icon: Users,
-          trend: 'Real employee data'
-        },
-        {
-          title: 'Active Requests',
-          value: isLoadingDashboard ? '...' : (dashboardStats?.activeRequests?.toString() || '0'),
-          icon: Zap,
-          trend: isLoadingDashboard ? null : `${dashboardStats?.trends?.activeRequestsChange >= 0 ? '+' : ''}${dashboardStats?.trends?.activeRequestsChange || 0} today`
-        },
-        {
-          title: 'Successful Matches',
-          value: isLoadingDashboard ? '...' : (dashboardStats?.successfulMatches?.toString() || '0'),
-          icon: Calendar,
-          trend: isLoadingDashboard ? null : `${dashboardStats?.trends?.successfulMatchesChange >= 0 ? '+' : ''}${dashboardStats?.trends?.successfulMatchesChange || 0} this week`
-        },
-        {
-          title: 'AI Confidence',
-          value: isLoadingDashboard ? '...' : `${dashboardStats?.aiConfidence || 0}%`,
-          icon: TrendingUp,
-          trend: isLoadingDashboard ? null : 'Real-time calculation'
-        },
-      ];
-    }
-  };
-
-  const statsCards = getStatsCards();
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Good morning, {user ? `${user.firstName}` : 'User'}! 👋
-        </h2>
-        <p className="text-gray-600">{getWelcomeMessage()}</p>
-      </div>
+    <div className="container mx-auto py-10">
+      {renderWelcomeMessage()}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsCards.map((card, index) => {
-          const Icon = card.icon;
-          return (
-            <Card key={index} className="hover:shadow-lg transition-shadow duration-200 border border-blue-100">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  {card.title}
-                </CardTitle>
-                <Icon className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{card.value}</div>
-                {card.trend && (
-                  <p className="text-xs text-blue-600 mt-1">{card.trend}</p>
-                )}
+      {/* Quick Stats */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="h-6 bg-gray-200 rounded-md w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded-md w-3/4"></div>
               </CardContent>
             </Card>
-          );
-        })}
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center space-x-2">
+                <CalendarDays className="h-5 w-5 text-blue-500" />
+                <span>Active Requests</span>
+              </CardTitle>
+              <CardDescription>Number of currently active swap requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardStats?.activeRequests}</div>
+              <div className="text-sm text-gray-500">
+                <TrendingUp className="inline-block h-4 w-4 mr-1" />
+                {dashboardStats?.trends.activeRequestsChange > 0 ? (
+                  <span className="text-green-500">
+                    +{dashboardStats?.trends.activeRequestsChange}%
+                  </span>
+                ) : (
+                  <span className="text-red-500">
+                    {dashboardStats?.trends.activeRequestsChange}%
+                  </span>
+                )}
+                <span> vs last week</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span>Successful Matches</span>
+              </CardTitle>
+              <CardDescription>Number of successful shift swap matches</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardStats?.successfulMatches}</div>
+              <div className="text-sm text-gray-500">
+                <TrendingUp className="inline-block h-4 w-4 mr-1" />
+                {dashboardStats?.trends.successfulMatchesChange > 0 ? (
+                  <span className="text-green-500">
+                    +{dashboardStats?.trends.successfulMatchesChange}%
+                  </span>
+                ) : (
+                  <span className="text-red-500">
+                    {dashboardStats?.trends.successfulMatchesChange}%
+                  </span>
+                )}
+                <span> vs last week</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5 text-purple-500" />
+                <span>AI Confidence</span>
+              </CardTitle>
+              <CardDescription>Confidence level of AI matching algorithm</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardStats?.aiConfidence}%</div>
+              <div className="text-sm text-gray-500">
+                <TrendingUp className="inline-block h-4 w-4 mr-1" />
+                {dashboardStats?.trends.aiConfidenceChange > 0 ? (
+                  <span className="text-green-500">
+                    +{dashboardStats?.trends.aiConfidenceChange}%
+                  </span>
+                ) : (
+                  <span className="text-red-500">
+                    {dashboardStats?.trends.aiConfidenceChange}%
+                  </span>
+                )}
+                <span> vs last week</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
+        {/* Sidebar Navigation */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Navigation</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button
+                variant={activeView === 'dashboard' ? 'secondary' : 'outline'}
+                className="w-full justify-start"
+                onClick={() => setActiveView('dashboard')}
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+              <Button
+                variant={activeView === 'schedule' ? 'secondary' : 'outline'}
+                className="w-full justify-start"
+                onClick={() => setActiveView('schedule')}
+              >
+                <CalendarDays className="h-4 w-4 mr-2" />
+                My Schedule
+              </Button>
+              <Button
+                variant={activeView === 'smart-match' ? 'secondary' : 'outline'}
+                className="w-full justify-start"
+                onClick={() => setActiveView('smart-match')}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Smart Matches
+              </Button>
+              <Button
+                variant={activeView === 'multi-hop' ? 'secondary' : 'outline'}
+                className="w-full justify-start"
+                onClick={() => setActiveView('multi-hop')}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Multi-hop Swaps
+              </Button>
+              <Button
+                variant={activeView === 'chains' ? 'secondary' : 'outline'}
+                className="w-full justify-start"
+                onClick={() => setActiveView('chains')}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Swap Chains
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-blue-500 hover:bg-blue-50"
+                onClick={() => setIsCreateIntentOpen(true)}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Create Swap Intent
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="lg:col-span-3">
+          {activeView === 'dashboard' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Dashboard Overview</CardTitle>
+                <CardDescription>Key metrics and insights</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Add your dashboard content here */}
+                <p>Welcome to your dashboard!</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeView === 'schedule' && (
+            <ScheduleView />
+          )}
+
+          {activeView === 'smart-match' && (
+            <SmartMatchView />
+          )}
+
+          {activeView === 'multi-hop' && (
+            <MultiHopMatchView />
+          )}
+
+          {activeView === 'chains' && (
+            <ChainManagementView />
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Zap className="h-5 w-5 text-blue-600" />
-              <span>Smart Recommendations</span>
-            </CardTitle>
-            <CardDescription>
-              AI-powered suggestions to optimize your schedule
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isLoadingIntents ? (
-              <div className="text-center py-4 text-gray-500">Loading recommendations...</div>
-            ) : activeIntents.length > 0 ? (
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <div className="flex items-start space-x-3">
-                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">Active Swap Intent</h4>
-                    <p className="text-sm text-gray-600">
-                      You have {activeIntents.length} active swap intent{activeIntents.length > 1 ? 's' : ''} searching for matches.
-                    </p>
-                    <Button size="sm" className="mt-2 bg-blue-600 hover:bg-blue-700">
-                      View Matches
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <div className="flex items-start space-x-3">
-                  <TrendingUp className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">Create Swap Intent</h4>
-                    <p className="text-sm text-gray-600">
-                      Start by creating a swap intent to find compatible matches with other employees.
-                    </p>
-                    <Button size="sm" variant="outline" className="mt-2 border-green-600 text-green-600 hover:bg-green-50">
-                      Create Intent
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {dashboardStats && (
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                <div className="flex items-start space-x-3">
-                  <TrendingUp className="h-5 w-5 text-purple-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">System Performance</h4>
-                    <p className="text-sm text-gray-600">
-                      AI confidence at {dashboardStats.aiConfidence}% with {dashboardStats.successfulMatches} successful matches.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow duration-200">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <span>Upcoming Schedule</span>
-            </CardTitle>
-            <CardDescription>
-              Your next 7 days at a glance
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {isLoadingSchedule ? (
-                <div className="text-center py-4 text-gray-500">Loading schedule...</div>
-              ) : weeklySchedule && weeklySchedule.length > 0 ? (
-                weeklySchedule.slice(0, 5).map((day, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <div className="font-medium text-gray-900">{day.day}</div>
-                      <div className="text-sm text-gray-600">
-                        {day.shift?.working
-                          ? `${day.shift.shiftStart} - ${day.shift.shiftEnd}`
-                          : 'Off'
-                        }
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {day.shift?.working && (
-                        <div className="text-sm text-gray-500">
-                          {day.shift.shiftType || 'Shift'}
-                        </div>
-                      )}
-                      <div className={`text-xs px-2 py-1 rounded ${
-                        day.shift?.working ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        {day.shift?.working ? 'confirmed' : 'off'}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-500">No schedule data available</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Create Swap Intent Modal */}
+      <CreateSwapIntentModal
+        isOpen={isCreateIntentOpen}
+        onClose={() => setIsCreateIntentOpen(false)}
+      />
     </div>
   );
 };

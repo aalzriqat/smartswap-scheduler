@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +29,7 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
 }) => {
   const { chain, executionStatus, isLoading } = useSwapChain(chainId);
   const { executeChain, isExecuting } = useSwapChains();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
 
   if (isLoading || !chain) {
     return (
@@ -93,10 +94,10 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
   };
 
   const canExecute = () => {
-    if (!user) return false;
+    if (!user || !userProfile) return false;
     
-    const isInitiator = chain.initiatorUserId === user._id;
-    const isAdmin = ['WorkFlowManagement', 'Developer', 'Manager'].includes(user.role);
+    const isInitiator = chain.initiatorUserId === userProfile.id;
+    const isAdmin = ['WorkFlowManagement', 'Developer', 'Manager'].includes(userProfile.role);
     const isFullyApproved = chain.participants.every(p => p.approvalStatus === 'approved');
     const isApproved = chain.status === 'approved';
     
