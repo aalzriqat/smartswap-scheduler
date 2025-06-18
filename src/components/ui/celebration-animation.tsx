@@ -1,221 +1,153 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import { CheckCircle, Sparkles, Heart, Star } from "lucide-react"
 
-interface CelebrationAnimationProps {
-  isVisible: boolean
-  onComplete?: () => void
-  type?: "success" | "match" | "achievement"
-  message?: string
-  duration?: number
+import React, { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
+
+interface MatchCelebrationProps {
+  isVisible: boolean;
+  onComplete: () => void;
+  message: string;
 }
 
-const celebrationConfig = {
-  success: {
-    icon: CheckCircle,
-    color: "text-green-600",
-    bgColor: "bg-green-50",
-    borderColor: "border-green-200",
-    particles: "🎉",
-    message: "Success!"
-  },
-  match: {
-    icon: Heart,
-    color: "text-pink-600",
-    bgColor: "bg-pink-50",
-    borderColor: "border-pink-200",
-    particles: "💖",
-    message: "Perfect Match!"
-  },
-  achievement: {
-    icon: Star,
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-50",
-    borderColor: "border-yellow-200",
-    particles: "⭐",
-    message: "Achievement Unlocked!"
-  }
-}
-
-export function CelebrationAnimation({
+export const MatchCelebration: React.FC<MatchCelebrationProps> = ({
   isVisible,
   onComplete,
-  type = "success",
-  message,
-  duration = 3000
-}: CelebrationAnimationProps) {
-  const [showParticles, setShowParticles] = React.useState(false)
-  const config = celebrationConfig[type]
-  const Icon = config.icon
+  message
+}) => {
+  const [animationPhase, setAnimationPhase] = useState<'initial' | 'show' | 'hide'>('initial');
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isVisible) {
-      setShowParticles(true)
-      
-      // Play success sound (if available)
-      try {
-        const audio = new Audio('/sounds/success.mp3')
-        audio.volume = 0.3
-        audio.play().catch(() => {
-          // Ignore audio errors (user might not have interacted with page yet)
-        })
-      } catch (error) {
-        // Ignore audio errors
-      }
-
+      setAnimationPhase('show');
       const timer = setTimeout(() => {
-        setShowParticles(false)
-        onComplete?.()
-      }, duration)
+        setAnimationPhase('hide');
+        setTimeout(onComplete, 500);
+      }, 3000);
 
-      return () => clearTimeout(timer)
+      return () => clearTimeout(timer);
+    } else {
+      setAnimationPhase('initial');
     }
-  }, [isVisible, duration, onComplete])
+  }, [isVisible, onComplete]);
 
-  if (!isVisible) return null
+  if (!isVisible && animationPhase === 'initial') return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/20 animate-in fade-in duration-300" />
+    <>
+      <style>{`
+        @keyframes confetti-fall {
+          to {
+            transform: translateY(100vh) rotate(360deg);
+          }
+        }
+        
+        @keyframes bounce-in {
+          0% {
+            transform: scale(0) rotate(-180deg);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.2) rotate(-90deg);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
+          }
+        }
+        
+        .confetti {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+          animation: confetti-fall 3s linear forwards;
+        }
+        
+        .celebration-bounce {
+          animation: bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .celebration-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+      `}</style>
       
-      {/* Floating particles */}
-      {showParticles && (
+      <div
+        className={cn(
+          "fixed inset-0 z-50 flex items-center justify-center pointer-events-none",
+          animationPhase === 'hide' && "opacity-0 transition-opacity duration-500"
+        )}
+      >
+        {/* Confetti Background */}
         <div className="absolute inset-0 overflow-hidden">
-          {Array.from({ length: 20 }).map((_, i) => (
+          {Array.from({ length: 50 }).map((_, i) => (
             <div
               key={i}
-              className="absolute text-2xl animate-bounce"
+              className="confetti"
               style={{
                 left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${2 + Math.random() * 2}s`
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${3 + Math.random() * 2}s`,
+                backgroundColor: [
+                  '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', 
+                  '#fd79a8', '#6c5ce7', '#a29bfe', '#fd79a8', '#fdcb6e'
+                ][Math.floor(Math.random() * 10)]
               }}
-            >
-              {config.particles}
-            </div>
+            />
           ))}
         </div>
-      )}
 
-      {/* Main celebration card */}
-      <div className={cn(
-        "relative bg-white rounded-2xl shadow-2xl border-2 p-8 max-w-sm mx-4",
-        "animate-in zoom-in-95 duration-500 ease-out",
-        config.borderColor
-      )}>
-        {/* Sparkle effects */}
-        <div className="absolute -top-2 -right-2">
-          <Sparkles className="h-6 w-6 text-yellow-400 animate-spin" />
-        </div>
-        <div className="absolute -bottom-2 -left-2">
-          <Sparkles className="h-4 w-4 text-blue-400 animate-pulse" />
-        </div>
-
-        {/* Content */}
-        <div className="text-center space-y-4">
-          {/* Main icon with pulse animation */}
-          <div className={cn(
-            "mx-auto w-16 h-16 rounded-full flex items-center justify-center",
-            "animate-pulse",
-            config.bgColor
-          )}>
-            <Icon className={cn("h-8 w-8", config.color)} />
+        {/* Main Celebration Card */}
+        <div className={cn(
+          "bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md text-center border-4 border-blue-500",
+          "celebration-bounce celebration-glow"
+        )}>
+          {/* Success Icon */}
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg 
+                className="w-10 h-10 text-white" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={3} 
+                  d="M5 13l4 4L19 7" 
+                />
+              </svg>
+            </div>
           </div>
 
           {/* Message */}
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {message || config.message}
-            </h3>
-            <p className="text-gray-600 text-sm">
-              {type === "match" && "Your swap request has been successfully matched!"}
-              {type === "success" && "Your action was completed successfully!"}
-              {type === "achievement" && "You've reached a new milestone!"}
-            </p>
-          </div>
-
-          {/* Animated progress bar */}
-          <div className="w-full bg-gray-200 rounded-full h-1 overflow-hidden">
-            <div 
-              className={cn(
-                "h-full rounded-full transition-all ease-linear",
-                config.color.replace('text-', 'bg-')
-              )}
-              style={{
-                width: "100%",
-                animation: `shrink ${duration}ms linear forwards`
-              }}
-            />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            🎉 Perfect Match! 🎉
+          </h2>
+          <p className="text-gray-600 text-lg mb-4">
+            {message}
+          </p>
+          
+          {/* Additional celebration elements */}
+          <div className="flex justify-center space-x-2 text-2xl">
+            <span className="animate-bounce">⭐</span>
+            <span className="animate-bounce" style={{ animationDelay: '0.1s' }}>🎊</span>
+            <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>✨</span>
+            <span className="animate-bounce" style={{ animationDelay: '0.3s' }}>🎉</span>
+            <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>⭐</span>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
-    </div>
-  )
-}
-
-// Preset celebration components
-export function SuccessCelebration({ 
-  isVisible, 
-  onComplete, 
-  message 
-}: { 
-  isVisible: boolean
-  onComplete?: () => void
-  message?: string 
-}) {
-  return (
-    <CelebrationAnimation
-      isVisible={isVisible}
-      onComplete={onComplete}
-      type="success"
-      message={message}
-    />
-  )
-}
-
-export function MatchCelebration({ 
-  isVisible, 
-  onComplete, 
-  message 
-}: { 
-  isVisible: boolean
-  onComplete?: () => void
-  message?: string 
-}) {
-  return (
-    <CelebrationAnimation
-      isVisible={isVisible}
-      onComplete={onComplete}
-      type="match"
-      message={message}
-    />
-  )
-}
-
-export function AchievementCelebration({ 
-  isVisible, 
-  onComplete, 
-  message 
-}: { 
-  isVisible: boolean
-  onComplete?: () => void
-  message?: string 
-}) {
-  return (
-    <CelebrationAnimation
-      isVisible={isVisible}
-      onComplete={onComplete}
-      type="achievement"
-      message={message}
-    />
-  )
-}
+    </>
+  );
+};

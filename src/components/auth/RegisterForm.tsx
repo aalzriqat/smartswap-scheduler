@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,13 +102,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       }
 
       const { confirmPassword, ...registerData } = data;
-      await registerUser({ ...registerData, skills: selectedSkills }, {
-        onError: (error: Error) => {
-          setError(error.message);
-        },
-      });
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      await registerUser({ ...registerData, skills: selectedSkills });
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred. Please try again.');
     }
   };
 

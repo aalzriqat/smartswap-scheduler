@@ -33,8 +33,8 @@ export const SmartMatchView: React.FC<SmartMatchViewProps> = ({ userRole }) => {
   const { matches, isLoading: isLoadingMatches, findMatches, isSearching } = useSmartMatches(activeIntentId);
   const { dashboardStats, isLoading: isLoadingDashboard } = useDashboardStats();
   const analytics = useAnalytics();
-  const trackMatchAccepted = analytics?.trackMatchAccepted || ((data: any) => console.log('Match accepted:', data));
-  const trackSearchPerformed = analytics?.trackSearchPerformed || ((data: any) => console.log('Search performed:', data));
+  const trackMatchAccepted = analytics?.trackMatchAccepted || ((data: Record<string, unknown>) => console.log('Match accepted:', data));
+  const trackSearchPerformed = analytics?.trackSearchPerformed || ((data: Record<string, unknown>) => console.log('Search performed:', data));
 
   // Set the first active intent as default when intents load
   useEffect(() => {
@@ -97,7 +97,13 @@ export const SmartMatchView: React.FC<SmartMatchViewProps> = ({ userRole }) => {
     try {
       const match = matches.find(m => m.id === matchId);
       if (match) {
-        trackMatchAccepted(match);
+        trackMatchAccepted({
+          matchId: match.id,
+          requesterIntentId: match.requesterIntentId,
+          targetIntentId: match.targetIntentId,
+          matchScore: match.matchScore,
+          compatibility: match.compatibility
+        });
 
         // Here you would implement the actual connection logic
         // For now, we'll show a success message

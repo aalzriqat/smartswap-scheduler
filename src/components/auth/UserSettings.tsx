@@ -1,411 +1,433 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPreferences } from '@/hooks/useSwapIntents';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Settings,
-  User,
-  Bell,
-  Shield,
-  MapPin,
-  Briefcase,
-  Save,
-  X
-} from 'lucide-react';
+import { Loader2, Save, User, Bell, Shield, X } from 'lucide-react';
 
 interface UserSettingsProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type TimeSlot = 'morning' | 'day' | 'evening' | 'any';
+
+const timeSlotOptions: { value: TimeSlot; label: string }[] = [
+  { value: 'morning', label: 'Morning (6AM - 12PM)' },
+  { value: 'day', label: 'Day (12PM - 6PM)' },
+  { value: 'evening', label: 'Evening (6PM - 12AM)' },
+  { value: 'any', label: 'Any Time' },
+];
+
+const marketplaceOptions = [
+  { value: 'AE', label: 'AE (United Arab Emirates)' },
+  { value: 'SA', label: 'SA (Saudi Arabia)' },
+  { value: 'UK', label: 'UK (United Kingdom)' },
+  { value: 'EG', label: 'EG (Egypt)' },
+];
+
+const skillOptions = [
+  { value: 'PhoneMU', label: 'Phone MU' },
+  { value: 'phoneOnly', label: 'Phone Only' },
+  { value: 'MuOnly', label: 'MU Only' },
+  { value: 'Email', label: 'Email Support' },
+  { value: 'General', label: 'General Support' },
+  { value: 'Specialty', label: 'Specialty Support' },
+];
+
 export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
-  const { preferences, updatePreferences, isLoading, isUpdating } = useUserPreferences();
+  const { preferences, updatePreferences, isUpdating } = useUserPreferences();
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'preferences' | 'notifications'>('profile');
   const [formData, setFormData] = useState({
-    // Profile data
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-
-    // Preferences data
-    autoMatchEnabled: preferences?.autoMatchEnabled ?? true,
-    preferredTimeSlots: preferences?.preferredTimeSlots || ['any'],
-    preferredMarketplaces: preferences?.preferredMarketplaces || [],
-    skillFlexibility: preferences?.skillFlexibility ?? false,
-    maxSwapsPerWeek: preferences?.maxSwapsPerWeek ?? 2,
-
-    // Notification settings
-    emailNotifications: preferences?.notificationSettings?.email ?? true,
-    pushNotifications: preferences?.notificationSettings?.push ?? true,
-    smsNotifications: preferences?.notificationSettings?.sms ?? false,
+    firstName: '',
+    lastName: '',
+    email: '',
+    autoMatchEnabled: true,
+    preferredTimeSlots: [] as TimeSlot[],
+    preferredMarketplaces: [] as string[],
+    skillFlexibility: false,
+    maxSwapsPerWeek: 3,
+    emailNotifications: true,
+    pushNotifications: true,
+    smsNotifications: false,
   });
 
-  React.useEffect(() => {
-    if (user && preferences) {
-      setFormData({
+  // Initialize form data when user or preferences change
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        autoMatchEnabled: preferences.autoMatchEnabled ?? true,
-        preferredTimeSlots: preferences.preferredTimeSlots || ['any'],
-        preferredMarketplaces: preferences.preferredMarketplaces || [],
-        skillFlexibility: preferences.skillFlexibility ?? false,
-        maxSwapsPerWeek: preferences.maxSwapsPerWeek ?? 2,
-        emailNotifications: preferences.notificationSettings?.email ?? true,
-        pushNotifications: preferences.notificationSettings?.push ?? true,
-        smsNotifications: preferences.notificationSettings?.sms ?? false,
-      });
+      }));
+    }
+
+    if (preferences) {
+      setFormData(prev => ({
+        ...prev,
+        autoMatchEnabled: preferences.autoMatchEnabled,
+        preferredTimeSlots: preferences.preferredTimeSlots as TimeSlot[],
+        preferredMarketplaces: preferences.preferredMarketplaces,
+        skillFlexibility: preferences.skillFlexibility,
+        maxSwapsPerWeek: preferences.maxSwapsPerWeek,
+        emailNotifications: preferences.emailNotifications,
+        pushNotifications: preferences.pushNotifications,
+        smsNotifications: preferences.smsNotifications,
+      }));
     }
   }, [user, preferences]);
 
-  const handleSavePreferences = () => {
-    updatePreferences({
-      autoMatchEnabled: formData.autoMatchEnabled,
-      preferredTimeSlots: formData.preferredTimeSlots,
-      preferredMarketplaces: formData.preferredMarketplaces,
-      skillFlexibility: formData.skillFlexibility,
-      maxSwapsPerWeek: formData.maxSwapsPerWeek,
-      notificationSettings: {
-        email: formData.emailNotifications,
-        push: formData.pushNotifications,
-        sms: formData.smsNotifications,
-      },
-    });
+  const handleTimeSlotToggle = (timeSlot: TimeSlot) => {
+    setFormData(prev => ({
+      ...prev,
+      preferredTimeSlots: prev.preferredTimeSlots.includes(timeSlot)
+        ? prev.preferredTimeSlots.filter(slot => slot !== timeSlot)
+        : [...prev.preferredTimeSlots, timeSlot]
+    }));
   };
 
-  const timeSlotOptions = [
-    { value: 'morning', label: 'Morning (6AM - 12PM)' },
-    { value: 'day', label: 'Day (12PM - 6PM)' },
-    { value: 'evening', label: 'Evening (6PM - 12AM)' },
-    { value: 'night', label: 'Night (12AM - 6AM)' },
-    { value: 'any', label: 'Any Time' },
-  ];
+  const handleMarketplaceToggle = (marketplace: string) => {
+    setFormData(prev => ({
+      ...prev,
+      preferredMarketplaces: prev.preferredMarketplaces.includes(marketplace)
+        ? prev.preferredMarketplaces.filter(m => m !== marketplace)
+        : [...prev.preferredMarketplaces, marketplace]
+    }));
+  };
 
-  const marketplaceOptions = [
-    { value: 'AE', label: 'UAE' },
-    { value: 'SA', label: 'Saudi Arabia' },
-    { value: 'UK', label: 'United Kingdom' },
-    { value: 'EG', label: 'Egypt' },
-  ];
+  const handleSave = async () => {
+    try {
+      const preferencesUpdate = {
+        autoMatchEnabled: formData.autoMatchEnabled,
+        preferredTimeSlots: formData.preferredTimeSlots,
+        preferredMarketplaces: formData.preferredMarketplaces,
+        skillFlexibility: formData.skillFlexibility,
+        maxSwapsPerWeek: formData.maxSwapsPerWeek,
+        notificationSettings: {
+          email: formData.emailNotifications,
+          push: formData.pushNotifications,
+          sms: formData.smsNotifications,
+        },
+      };
 
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'preferences', label: 'Swap Preferences', icon: Settings },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-  ];
+      updatePreferences(preferencesUpdate);
+      
+      // Close modal after successful update
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+    } catch (error) {
+      console.error('Error updating settings:', error);
+    }
+  };
 
-  const renderProfileTab = () => (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-semibold">
-          {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">{user?.firstName} {user?.lastName}</h3>
-          <p className="text-sm text-gray-500">{user?.email}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">First Name</Label>
-          <Input
-            id="firstName"
-            value={formData.firstName}
-            onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-            disabled // Profile editing would require additional backend endpoints
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="lastName">Last Name</Label>
-          <Input
-            id="lastName"
-            value={formData.lastName}
-            onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-            disabled // Profile editing would require additional backend endpoints
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-          disabled // Profile editing would require additional backend endpoints
-        />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Badge className="bg-purple-100 text-purple-800">
-          <Shield className="h-3 w-3 mr-1" />
-          {user?.role}
-        </Badge>
-        <Badge variant="outline">
-          <MapPin className="h-3 w-3 mr-1" />
-          {user?.marketplace}
-        </Badge>
-        {user?.skills?.map((skill, index) => (
-          <Badge key={index} variant="secondary">
-            <Briefcase className="h-2 w-2 mr-1" />
-            {skill}
-          </Badge>
-        ))}
-      </div>
-
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <p className="text-sm text-blue-800">
-          <strong>Note:</strong> Profile information editing is currently read-only.
-          Contact your administrator to update your profile details.
-        </p>
-      </div>
-    </div>
-  );
-
-  const renderPreferencesTab = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <Label htmlFor="autoMatch">Auto-matching</Label>
-          <p className="text-sm text-gray-500">Automatically find swap matches for you</p>
-        </div>
-        <Switch
-          id="autoMatch"
-          checked={formData.autoMatchEnabled}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, autoMatchEnabled: checked }))}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Preferred Time Slots</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {timeSlotOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id={`time-${option.value}`}
-                checked={formData.preferredTimeSlots.includes(option.value)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setFormData(prev => ({
-                      ...prev,
-                      preferredTimeSlots: [...prev.preferredTimeSlots, option.value]
-                    }));
-                  } else {
-                    setFormData(prev => ({
-                      ...prev,
-                      preferredTimeSlots: prev.preferredTimeSlots.filter(slot => slot !== option.value)
-                    }));
-                  }
-                }}
-                className="rounded border-gray-300"
-              />
-              <Label htmlFor={`time-${option.value}`} className="text-sm">
-                {option.label}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Preferred Marketplaces</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {marketplaceOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id={`marketplace-${option.value}`}
-                checked={formData.preferredMarketplaces.includes(option.value)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setFormData(prev => ({
-                      ...prev,
-                      preferredMarketplaces: [...prev.preferredMarketplaces, option.value]
-                    }));
-                  } else {
-                    setFormData(prev => ({
-                      ...prev,
-                      preferredMarketplaces: prev.preferredMarketplaces.filter(mp => mp !== option.value)
-                    }));
-                  }
-                }}
-                className="rounded border-gray-300"
-              />
-              <Label htmlFor={`marketplace-${option.value}`} className="text-sm">
-                {option.label}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <Label htmlFor="skillFlexibility">Skill Flexibility</Label>
-          <p className="text-sm text-gray-500">Allow swaps with different skill requirements</p>
-        </div>
-        <Switch
-          id="skillFlexibility"
-          checked={formData.skillFlexibility}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, skillFlexibility: checked }))}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="maxSwaps">Maximum Swaps Per Week</Label>
-        <Select
-          value={formData.maxSwapsPerWeek.toString()}
-          onValueChange={(value) => setFormData(prev => ({ ...prev, maxSwapsPerWeek: parseInt(value) }))}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[0, 1, 2, 3, 4, 5, 6, 7].map((num) => (
-              <SelectItem key={num} value={num.toString()}>
-                {num === 0 ? 'No limit' : `${num} swap${num > 1 ? 's' : ''}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-
-  const renderNotificationsTab = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <Label htmlFor="emailNotif">Email Notifications</Label>
-          <p className="text-sm text-gray-500">Receive notifications via email</p>
-        </div>
-        <Switch
-          id="emailNotif"
-          checked={formData.emailNotifications}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, emailNotifications: checked }))}
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <Label htmlFor="pushNotif">Push Notifications</Label>
-          <p className="text-sm text-gray-500">Receive browser push notifications</p>
-        </div>
-        <Switch
-          id="pushNotif"
-          checked={formData.pushNotifications}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, pushNotifications: checked }))}
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <Label htmlFor="smsNotif">SMS Notifications</Label>
-          <p className="text-sm text-gray-500">Receive notifications via SMS</p>
-        </div>
-        <Switch
-          id="smsNotif"
-          checked={formData.smsNotifications}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, smsNotifications: checked }))}
-        />
-      </div>
-
-      <div className="bg-yellow-50 p-4 rounded-lg">
-        <p className="text-sm text-yellow-800">
-          <strong>Note:</strong> SMS notifications may incur charges based on your mobile plan.
-        </p>
-      </div>
-    </div>
-  );
+  if (!user) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Settings className="h-5 w-5" />
+            <User className="h-5 w-5" />
             <span>User Settings</span>
           </DialogTitle>
           <DialogDescription>
-            Manage your profile, preferences, and notification settings.
+            Manage your profile and preferences for SmartSwap
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex space-x-6">
-          {/* Sidebar */}
-          <div className="w-48 space-y-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <Button
-                  key={tab.id}
-                  variant={activeTab === tab.id ? "default" : "ghost"}
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab(tab.id as any)}
-                >
-                  <Icon className="h-4 w-4 mr-2" />
-                  {tab.label}
-                </Button>
-              );
-            })}
-          </div>
+        <div className="space-y-6">
+          {/* Profile Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <User className="h-4 w-4" />
+                <span>Profile Information</span>
+              </CardTitle>
+              <CardDescription>
+                Your basic profile details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                    disabled
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                    disabled
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  disabled
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge variant="outline">Role: {user.role}</Badge>
+                <Badge variant="outline">Marketplace: {user.marketplace}</Badge>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Content */}
-          <div className="flex-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {tabs.find(tab => tab.id === activeTab)?.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {activeTab === 'profile' && renderProfileTab()}
-                {activeTab === 'preferences' && renderPreferencesTab()}
-                {activeTab === 'notifications' && renderNotificationsTab()}
-              </CardContent>
-            </Card>
-          </div>
+          {/* Matching Preferences */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Shield className="h-4 w-4" />
+                <span>Matching Preferences</span>
+              </CardTitle>
+              <CardDescription>
+                Configure how SmartSwap finds matches for you
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Auto Match Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Auto-matching</Label>
+                  <p className="text-sm text-gray-500">
+                    Automatically search for matches when you create swap intents
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.autoMatchEnabled}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, autoMatchEnabled: checked }))
+                  }
+                />
+              </div>
+
+              <Separator />
+
+              {/* Preferred Time Slots */}
+              <div className="space-y-3">
+                <Label>Preferred Time Slots</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {timeSlotOptions.map((timeSlot) => (
+                    <div key={timeSlot.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`timeSlot-${timeSlot.value}`}
+                        checked={formData.preferredTimeSlots.includes(timeSlot.value)}
+                        onCheckedChange={() => handleTimeSlotToggle(timeSlot.value)}
+                      />
+                      <Label htmlFor={`timeSlot-${timeSlot.value}`} className="text-sm">
+                        {timeSlot.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                {formData.preferredTimeSlots.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {formData.preferredTimeSlots.map((slot) => (
+                      <Badge key={slot} variant="secondary" className="text-xs">
+                        {timeSlotOptions.find(t => t.value === slot)?.label}
+                        <button
+                          type="button"
+                          onClick={() => handleTimeSlotToggle(slot)}
+                          className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Preferred Marketplaces */}
+              <div className="space-y-3">
+                <Label>Preferred Marketplaces</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {marketplaceOptions.map((marketplace) => (
+                    <div key={marketplace.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`marketplace-${marketplace.value}`}
+                        checked={formData.preferredMarketplaces.includes(marketplace.value)}
+                        onCheckedChange={() => handleMarketplaceToggle(marketplace.value)}
+                      />
+                      <Label htmlFor={`marketplace-${marketplace.value}`} className="text-sm">
+                        {marketplace.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                {formData.preferredMarketplaces.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {formData.preferredMarketplaces.map((marketplace) => (
+                      <Badge key={marketplace} variant="secondary" className="text-xs">
+                        {marketplaceOptions.find(m => m.value === marketplace)?.label}
+                        <button
+                          type="button"
+                          onClick={() => handleMarketplaceToggle(marketplace)}
+                          className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Skill Flexibility */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Skill Flexibility</Label>
+                  <p className="text-sm text-gray-500">
+                    Allow matches with different skill requirements
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.skillFlexibility}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, skillFlexibility: checked }))
+                  }
+                />
+              </div>
+
+              <Separator />
+
+              {/* Max Swaps Per Week */}
+              <div className="space-y-2">
+                <Label htmlFor="maxSwaps">Maximum Swaps Per Week</Label>
+                <Select
+                  value={formData.maxSwapsPerWeek.toString()}
+                  onValueChange={(value) => 
+                    setFormData(prev => ({ ...prev, maxSwapsPerWeek: parseInt(value) }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} swap{num > 1 ? 's' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notification Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Bell className="h-4 w-4" />
+                <span>Notification Preferences</span>
+              </CardTitle>
+              <CardDescription>
+                Choose how you want to receive notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Email Notifications</Label>
+                  <p className="text-sm text-gray-500">
+                    Receive notifications via email
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.emailNotifications}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, emailNotifications: checked }))
+                  }
+                />
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Push Notifications</Label>
+                  <p className="text-sm text-gray-500">
+                    Receive push notifications in your browser
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.pushNotifications}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, pushNotifications: checked }))
+                  }
+                />
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>SMS Notifications</Label>
+                  <p className="text-sm text-gray-500">
+                    Receive notifications via SMS (if phone number provided)
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.smsNotifications}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, smsNotifications: checked }))
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="flex justify-end space-x-2 pt-4 border-t">
+        {/* Actions */}
+        <div className="flex justify-end space-x-2 pt-4">
           <Button variant="outline" onClick={onClose}>
-            <X className="h-4 w-4 mr-2" />
             Cancel
           </Button>
-          {(activeTab === 'preferences' || activeTab === 'notifications') && (
-            <Button
-              onClick={handleSavePreferences}
-              disabled={isUpdating}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {isUpdating ? 'Saving...' : 'Save Changes'}
-            </Button>
-          )}
+          <Button 
+            onClick={handleSave} 
+            disabled={isUpdating}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isUpdating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
