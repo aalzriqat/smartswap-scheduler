@@ -81,9 +81,9 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
         preferredMarketplaces: preferences.preferredMarketplaces,
         skillFlexibility: preferences.skillFlexibility,
         maxSwapsPerWeek: preferences.maxSwapsPerWeek,
-        emailNotifications: preferences.emailNotifications,
-        pushNotifications: preferences.pushNotifications,
-        smsNotifications: preferences.smsNotifications,
+        emailNotifications: preferences.notificationSettings.email,
+        pushNotifications: preferences.notificationSettings.push,
+        smsNotifications: preferences.notificationSettings.sms,
       }));
     }
   }, [user, preferences]);
