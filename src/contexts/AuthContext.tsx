@@ -4,8 +4,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 
+interface UserProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: 'Employee' | 'Manager' | 'WorkFlowManagement' | 'Developer';
+  skills: string[];
+  marketplace: string;
+  email: string;
+}
+
 interface AuthContextType {
   user: User | null;
+  userProfile: UserProfile | null;
   isLoading: boolean;
   isLoggingIn: boolean;
   isRegistering: boolean;
@@ -43,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { toast } = useToast();
 
   // Check authentication status on mount
@@ -75,12 +86,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session?.user?.email);
       
+      setUser(session?.user ?? null);
+      
       if (session?.user) {
-        setUser(session.user);
-        
         // Fetch user profile when user signs in
         setTimeout(async () => {
           try {
@@ -98,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }, 0);
       } else {
-        setUser(null);
         setUserProfile(null);
       }
       
@@ -221,6 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: AuthContextType = {
     user,
+    userProfile,
     isLoading,
     isLoggingIn,
     isRegistering,

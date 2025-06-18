@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthPage } from './AuthPage';
@@ -16,7 +17,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRoles = [],
   fallback,
 }) => {
-  const { user, isLoading } = useAuth();
+  const { user, userProfile, isLoading } = useAuth();
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -38,7 +39,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Check role-based access if roles are specified
-  if (requiredRoles.length > 0 && !requiredRoles.includes(user.role)) {
+  if (requiredRoles.length > 0 && (!userProfile || !requiredRoles.includes(userProfile.role))) {
     if (fallback) {
       return <>{fallback}</>;
     }
@@ -52,7 +53,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             <Alert variant="destructive" className="mt-4">
               <AlertDescription>
                 You don't have permission to access this page. Required roles: {requiredRoles.join(', ')}.
-                Your current role: {user.role}.
+                Your current role: {userProfile?.role || 'Unknown'}.
               </AlertDescription>
             </Alert>
           </CardContent>
