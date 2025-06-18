@@ -1,64 +1,53 @@
 
-// API Configuration
+// API Configuration for Supabase
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
+  BASE_URL: 'https://xumzfrtoyfqnotncedih.supabase.co/rest/v1',
   TIMEOUT: 10000, // 10 seconds
   RETRY_ATTEMPTS: 3,
 };
 
-// API Endpoints
-export const API_ENDPOINTS = {
-  // Authentication
-  AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    ME: '/auth/me',
-    REFRESH: '/auth/refresh',
-  },
+// Supabase Configuration
+export const SUPABASE_CONFIG = {
+  URL: 'https://xumzfrtoyfqnotncedih.supabase.co',
+  ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bXpmcnRveWZxbm90bmNlZGloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MDI1ODQsImV4cCI6MjA2NTQ3ODU4NH0.XMZ7heoPhUGVKwurHdOhfv-OQaHCWWI4z-OMGyqKukM',
+};
 
-  // Users
-  USERS: {
-    BASE: '/users',
-    BY_ID: (id: string) => `/users/${id}`,
-    UPDATE: (id: string) => `/users/${id}`,
-    DELETE: (id: string) => `/users/${id}`,
+// API Endpoints for direct Supabase REST API usage
+export const API_ENDPOINTS = {
+  // Profiles
+  PROFILES: {
+    BASE: '/profiles',
+    BY_ID: (id: string) => `/profiles?id=eq.${id}`,
   },
 
   // Schedules & Shifts
   SCHEDULES: {
-    USER: (userId: string) => `/schedules/user/${userId}`,
+    BASE: '/schedules',
+    BY_USER: (userId: string) => `/schedules?user_id=eq.${userId}`,
   },
   SHIFTS: {
     BASE: '/shifts',
-    BY_ID: (id: string) => `/shifts/${id}`,
-    UPDATE: (id: string) => `/shifts/${id}`,
-    DELETE: (id: string) => `/shifts/${id}`,
+    BY_USER: (userId: string) => `/shifts?user_id=eq.${userId}`,
+    BY_ID: (id: string) => `/shifts?id=eq.${id}`,
   },
 
   // Swap Requests
-  SWAPS: {
-    BASE: '/swaps',
-    BY_ID: (id: string) => `/swaps/${id}`,
-    ACCEPT: (id: string) => `/swaps/${id}/accept`,
-    REJECT: (id: string) => `/swaps/${id}/reject`,
-    CANCEL: (id: string) => `/swaps/${id}`,
+  SWAP_REQUESTS: {
+    BASE: '/swap_requests',
+    BY_USER: (userId: string) => `/swap_requests?or=(requester_id.eq.${userId},target_user_id.eq.${userId})`,
   },
 
-  // Smart Swap Intents
+  // Swap Intents
   SWAP_INTENTS: {
-    BASE: '/swap-intents',
-    ACTIVE: '/swap-intents/active',
-    USER: (userId: string) => `/swap-intents/user/${userId}`,
-    BY_ID: (id: string) => `/swap-intents/${id}`,
-    MATCHES: (id: string) => `/swap-intents/${id}/matches`,
-    PREFERENCES: '/swap-intents/preferences',
+    BASE: '/swap_intents',
+    ACTIVE: '/swap_intents?status=eq.active',
+    BY_USER: (userId: string) => `/swap_intents?user_id=eq.${userId}`,
   },
 
-  // Analytics
-  ANALYTICS: {
-    BASE: '/analytics',
-    USER: (userId: string) => `/analytics/user/${userId}`,
+  // User Preferences
+  USER_PREFERENCES: {
+    BASE: '/user_preferences',
+    BY_USER: (userId: string) => `/user_preferences?user_id=eq.${userId}`,
   },
 };
 
