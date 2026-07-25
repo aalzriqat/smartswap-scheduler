@@ -47,10 +47,10 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ onNavigate }
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-1">
+        <h2 className="text-3xl font-bold text-foreground mb-1">
           {greeting}, {userProfile?.first_name}! 👋
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Team overview — monitor swap activity, approve chains, and keep shifts covered.
         </p>
       </div>
@@ -64,8 +64,8 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ onNavigate }
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">{kpi.label}</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-1">{kpi.value}</p>
+                    <p className="text-sm text-muted-foreground">{kpi.label}</p>
+                    <p className="text-3xl font-bold text-foreground mt-1">{kpi.value}</p>
                   </div>
                   <div className={`rounded-lg p-3 ${kpi.bg}`}>
                     <Icon className={`h-6 w-6 ${kpi.color}`} />
@@ -89,7 +89,7 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ onNavigate }
           </CardHeader>
           <CardContent className="space-y-3">
             {approvalQueue.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 <CheckCircle className="h-10 w-10 text-green-500 mx-auto mb-2" />
                 <p>All caught up — no chains awaiting approval.</p>
               </div>
@@ -97,10 +97,10 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ onNavigate }
               approvalQueue.slice(0, 5).map((chain: any) => (
                 <div key={chain.chainId || chain._id} className="flex items-center justify-between rounded-lg border p-3">
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-foreground">
                       Chain {(chain.chainId || chain._id || '').toString().slice(-6)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {chain.participants?.length ?? 0} participants · {chain.status}
                     </p>
                   </div>
@@ -139,7 +139,7 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ onNavigate }
             </CardHeader>
             <CardContent>
               {skills.length === 0 ? (
-                <p className="text-sm text-gray-500">No skill data yet.</p>
+                <p className="text-sm text-muted-foreground">No skill data yet.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {skills.map((s: any) => (

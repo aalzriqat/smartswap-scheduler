@@ -104,7 +104,7 @@ export const MultiHopMatchView: React.FC<MultiHopMatchViewProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-medium">Multi-hop Swap Detection</h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Find complex swap chains that solve scheduling conflicts for multiple users
                 </p>
               </div>
@@ -158,7 +158,7 @@ export const MultiHopMatchView: React.FC<MultiHopMatchViewProps> = ({
                         View Details
                       </Button>
                     </div>
-                    <div className="mt-2 text-sm text-gray-600">
+                    <div className="mt-2 text-sm text-muted-foreground">
                       Direct swap with compatible user
                     </div>
                   </CardContent>
@@ -210,7 +210,7 @@ export const MultiHopMatchView: React.FC<MultiHopMatchViewProps> = ({
                     <ChainVisualization chain={chain} compact={true} />
 
                     {/* Chain Benefits */}
-                    <div className="mt-3 flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="mt-3 flex items-center space-x-4 text-sm text-muted-foreground">
                       {chain.chainScore >= 85 && (
                         <div className="flex items-center space-x-1 text-green-600">
                           <CheckCircle className="h-3 w-3" />

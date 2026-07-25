@@ -36,7 +36,7 @@ export const UserProfile: React.FC = () => {
         return 'bg-green-100 text-green-800';
       case 'Employee':
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -157,10 +157,10 @@ export const UserProfileCompact: React.FC = () => {
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">
+        <p className="text-sm font-medium text-foreground truncate">
           {userProfile.first_name} {userProfile.last_name}
         </p>
-        <p className="text-xs text-gray-500 truncate">
+        <p className="text-xs text-muted-foreground truncate">
           {userProfile.role} • {userProfile.marketplace}
         </p>
       </div>
@@ -168,7 +168,7 @@ export const UserProfileCompact: React.FC = () => {
         variant="ghost"
         size="sm"
         onClick={() => logout()}
-        className="text-gray-500 hover:text-red-600"
+        className="text-muted-foreground hover:text-red-600"
       >
         <LogOut className="h-4 w-4" />
       </Button>

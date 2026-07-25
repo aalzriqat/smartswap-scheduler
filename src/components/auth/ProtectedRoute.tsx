@@ -26,7 +26,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <Card className="w-full max-w-md mx-auto">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-muted-foreground">Loading...</p>
           </CardContent>
         </Card>
       </div>
@@ -49,7 +49,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <Card className="w-full max-w-md mx-auto">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Shield className="h-12 w-12 text-red-500 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
             <Alert variant="destructive" className="mt-4">
               <AlertDescription>
                 You don't have permission to access this page. Required roles: {requiredRoles.join(', ')}.

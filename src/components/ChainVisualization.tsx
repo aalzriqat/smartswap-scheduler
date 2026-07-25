@@ -25,8 +25,8 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
       case 'executing': return 'bg-purple-100 text-purple-800';
       case 'executed': return 'bg-emerald-100 text-emerald-800';
       case 'failed': return 'bg-red-100 text-red-800';
-      case 'expired': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'expired': return 'bg-muted text-foreground';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -35,7 +35,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
       case 'approved': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -62,7 +62,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-1">
-                <Users className="h-4 w-4 text-gray-500" />
+                <Users className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">{totalParticipants} users</span>
               </div>
               <Badge className={getStatusColor(chain.status)}>
@@ -75,7 +75,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
                 </span>
               </div>
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               {approvedCount}/{totalParticipants} approved
             </div>
           </div>
@@ -104,7 +104,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
           </div>
         </div>
         
-        <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
               <Users className="h-4 w-4" />
@@ -126,7 +126,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
       <CardContent>
         {/* Chain Flow Visualization */}
         <div className="mb-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Swap Flow</h4>
+          <h4 className="text-sm font-medium text-foreground mb-3">Swap Flow</h4>
           <div className="flex items-center justify-center space-x-2 overflow-x-auto pb-2">
             {chain.participants.map((participant, index) => (
               <React.Fragment key={participant.userId}>
@@ -145,7 +145,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
                 </div>
                 
                 {index < chain.participants.length - 1 && (
-                  <ArrowRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                  <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 )}
               </React.Fragment>
             ))}
@@ -153,7 +153,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
             {/* Show circular arrow for complete cycles */}
             {chain.participants.length > 2 && (
               <>
-                <ArrowRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <ArrowRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 <div className="flex flex-col items-center space-y-2">
                   <Avatar className="h-10 w-10 border-2 border-dashed border-gray-300">
                     <AvatarFallback className="text-xs">
@@ -172,12 +172,12 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
         {/* Approval Progress */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-medium text-gray-700">Approval Progress</h4>
-            <span className="text-sm text-gray-600">
+            <h4 className="text-sm font-medium text-foreground">Approval Progress</h4>
+            <span className="text-sm text-muted-foreground">
               {approvedCount}/{totalParticipants} approved
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-muted rounded-full h-2">
             <div 
               className="bg-green-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(approvedCount / totalParticipants) * 100}%` }}
@@ -189,10 +189,10 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
         {showDetails && (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Participants</h4>
+              <h4 className="text-sm font-medium text-foreground mb-2">Participants</h4>
               <div className="space-y-2">
                 {chain.participants.map((participant, index) => (
-                  <div key={participant.userId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={participant.userId} className="flex items-center justify-between p-2 bg-muted/50 rounded">
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="text-xs">
@@ -201,7 +201,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
                       </Avatar>
                       <div>
                         <div className="text-sm font-medium">User {participant.userId.slice(-4)}</div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           Step {index + 1} in chain
                         </div>
                       </div>
@@ -214,7 +214,7 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
                         {participant.approvalStatus}
                       </Badge>
                       {participant.approvalStatus === 'approved' && participant.approvedAt && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {format(new Date(participant.approvedAt), 'MMM dd, HH:mm')}
                         </span>
                       )}
@@ -246,8 +246,8 @@ export const ChainVisualization: React.FC<ChainVisualizationProps> = ({
             {/* Chain Notes */}
             {chain.notes && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Notes</h4>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                <h4 className="text-sm font-medium text-foreground mb-2">Notes</h4>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
                   {chain.notes}
                 </p>
               </div>

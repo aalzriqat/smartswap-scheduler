@@ -36,11 +36,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userRole }) => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-3">
+        <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center space-x-3">
           <TrendingUp className="h-8 w-8 text-blue-600" />
           <span>Analytics Dashboard</span>
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Comprehensive insights into system performance, user behavior, and optimization opportunities.
         </p>
       </div>
@@ -185,7 +185,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userRole }) => {
                 <span>Database Performance</span>
                 <span className="font-medium">98.5%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div className="bg-green-500 h-2 rounded-full" style={{ width: '98.5%' }}></div>
               </div>
             </div>
@@ -195,7 +195,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userRole }) => {
                 <span>API Response Time</span>
                 <span className="font-medium">245ms</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div className="bg-blue-500 h-2 rounded-full" style={{ width: '85%' }}></div>
               </div>
             </div>
@@ -205,7 +205,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userRole }) => {
                 <span>User Satisfaction</span>
                 <span className="font-medium">96.2%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div className="bg-purple-500 h-2 rounded-full" style={{ width: '96.2%' }}></div>
               </div>
             </div>
@@ -215,7 +215,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ userRole }) => {
                 <span>System Uptime</span>
                 <span className="font-medium">99.9%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div className="bg-green-500 h-2 rounded-full" style={{ width: '99.9%' }}></div>
               </div>
             </div>

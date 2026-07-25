@@ -65,8 +65,8 @@ export const ChainManagementView: React.FC = () => {
       case 'executing': return 'bg-purple-100 text-purple-800';
       case 'executed': return 'bg-emerald-100 text-emerald-800';
       case 'failed': return 'bg-red-100 text-red-800';
-      case 'expired': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'expired': return 'bg-muted text-foreground';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -85,9 +85,9 @@ export const ChainManagementView: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-muted rounded w-1/3"></div>
+          <div className="h-32 bg-muted rounded"></div>
+          <div className="h-32 bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -98,8 +98,8 @@ export const ChainManagementView: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Multi-hop Swap Chains</h2>
-          <p className="text-gray-600">Manage complex swap chains and approvals</p>
+          <h2 className="text-2xl font-bold text-foreground">Multi-hop Swap Chains</h2>
+          <p className="text-muted-foreground">Manage complex swap chains and approvals</p>
         </div>
         {totalPending > 0 && (
           <Badge variant="destructive" className="text-sm">
@@ -116,7 +116,7 @@ export const ChainManagementView: React.FC = () => {
               <Clock className="h-4 w-4 text-yellow-500" />
               <div>
                 <div className="text-2xl font-bold">{totalPending}</div>
-                <div className="text-xs text-gray-600">Pending Approvals</div>
+                <div className="text-xs text-muted-foreground">Pending Approvals</div>
               </div>
             </div>
           </CardContent>
@@ -128,7 +128,7 @@ export const ChainManagementView: React.FC = () => {
               <CheckCircle className="h-4 w-4 text-green-500" />
               <div>
                 <div className="text-2xl font-bold">{approvedChains.length}</div>
-                <div className="text-xs text-gray-600">Approved Chains</div>
+                <div className="text-xs text-muted-foreground">Approved Chains</div>
               </div>
             </div>
           </CardContent>
@@ -140,7 +140,7 @@ export const ChainManagementView: React.FC = () => {
               <Users className="h-4 w-4 text-blue-500" />
               <div>
                 <div className="text-2xl font-bold">{userChains.length}</div>
-                <div className="text-xs text-gray-600">Total Chains</div>
+                <div className="text-xs text-muted-foreground">Total Chains</div>
               </div>
             </div>
           </CardContent>
@@ -154,7 +154,7 @@ export const ChainManagementView: React.FC = () => {
                 <div className="text-2xl font-bold">
                   {userChains.filter(c => c.status === 'executed').length}
                 </div>
-                <div className="text-xs text-gray-600">Executed</div>
+                <div className="text-xs text-muted-foreground">Executed</div>
               </div>
             </div>
           </CardContent>
@@ -199,7 +199,7 @@ export const ChainManagementView: React.FC = () => {
                         <span className="font-medium">
                           {chain.participants.length}-person chain
                         </span>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-muted-foreground">
                           Score: {chain.chainScore}%
                         </span>
                       </div>
@@ -244,7 +244,7 @@ export const ChainManagementView: React.FC = () => {
                         <span className="font-medium">
                           {chain.participants.length}-person chain
                         </span>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-muted-foreground">
                           Score: {chain.chainScore}%
                         </span>
                       </div>
@@ -301,7 +301,7 @@ export const ChainManagementView: React.FC = () => {
                         <span className="font-medium">
                           {chain.participants.length}-person chain
                         </span>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-muted-foreground">
                           Score: {chain.chainScore}%
                         </span>
                       </div>
@@ -335,8 +335,8 @@ export const ChainManagementView: React.FC = () => {
           <TabsContent value="active" className="space-y-4">
             {isLoadingActiveChains ? (
               <div className="animate-pulse space-y-4">
-                <div className="h-20 bg-gray-200 rounded"></div>
-                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-20 bg-muted rounded"></div>
+                <div className="h-20 bg-muted rounded"></div>
               </div>
             ) : activeChains.length > 0 ? (
               <div className="space-y-4">
@@ -351,7 +351,7 @@ export const ChainManagementView: React.FC = () => {
                           <span className="font-medium">
                             {chain.participants.length}-person chain
                           </span>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-muted-foreground">
                             Score: {chain.chainScore}%
                           </span>
                         </div>
@@ -408,7 +408,7 @@ export const ChainManagementView: React.FC = () => {
       {/* Chain Progress Modal */}
       {selectedChain && (
         <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${isProgressModalOpen ? 'block' : 'hidden'}`}>
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-card rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Chain Progress</h3>
               <Button

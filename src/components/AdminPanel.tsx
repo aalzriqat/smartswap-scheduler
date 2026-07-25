@@ -74,11 +74,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active': return 'bg-green-100 text-green-700';
-      case 'Inactive': return 'bg-gray-100 text-gray-700';
+      case 'Inactive': return 'bg-muted text-foreground';
       case 'healthy': return 'text-green-600';
       case 'warning': return 'text-yellow-600';
       case 'error': return 'text-red-600';
-      default: return 'bg-gray-100 text-gray-700';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -87,9 +87,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
       <div className="p-6 max-w-7xl mx-auto">
         <Card className="text-center">
           <CardContent className="p-8">
-            <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Access Restricted</h3>
-            <p className="text-gray-600">You don't have permission to access the admin panel.</p>
+            <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">Access Restricted</h3>
+            <p className="text-muted-foreground">You don't have permission to access the admin panel.</p>
           </CardContent>
         </Card>
       </div>
@@ -99,11 +99,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-3">
+        <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center space-x-3">
           <Settings className="h-8 w-8 text-blue-600" />
           <span>Team Management</span>
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Manage your team, monitor coverage, and review swap activity across SmartSwap.
         </p>
       </div>
@@ -176,14 +176,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
                   const count = (users || []).filter((u) => u.role === role).length;
                   if (count === 0) return null;
                   return (
-                    <div key={role} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm text-gray-900">{role}</span>
-                      <span className="text-sm font-semibold text-gray-700">{count}</span>
+                    <div key={role} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm text-foreground">{role}</span>
+                      <span className="text-sm font-semibold text-foreground">{count}</span>
                     </div>
                   );
                 })}
                 {(!users || users.length === 0) && (
-                  <p className="text-sm text-gray-500">No team members yet.</p>
+                  <p className="text-sm text-muted-foreground">No team members yet.</p>
                 )}
               </div>
             </CardContent>
@@ -199,7 +199,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
             <CardContent>
               <div className="space-y-4">
                 {isLoadingUsers ? (
-                  <div className="text-center py-8 text-gray-500">Loading users...</div>
+                  <div className="text-center py-8 text-muted-foreground">Loading users...</div>
                 ) : users.length > 0 ? (
                   users.slice(0, 10).map((user) => (
                     <div key={user._id} className="flex items-center justify-between p-4 border rounded-lg">
@@ -208,10 +208,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
                           <Users className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-foreground">
                             {user.firstName} {user.lastName}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted-foreground">
                             {user.email} • Last activity: {getLastLogin(user)}
                           </div>
                         </div>
@@ -233,11 +233,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500">No users found</div>
+                  <div className="text-center py-8 text-muted-foreground">No users found</div>
                 )}
                 {users.length > 10 && (
                   <div className="text-center pt-4">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Showing 10 of {users.length} users
                     </p>
                   </div>
@@ -258,7 +258,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
                 {systemMetrics.map((metric, index) => (
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">{metric.name}</span>
+                      <span className="font-medium text-foreground">{metric.name}</span>
                       <span className={`font-bold ${getStatusColor(metric.status)}`}>
                         {metric.value}
                       </span>
@@ -298,8 +298,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
                 ].map((item, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
                     <div>
-                      <h4 className="font-medium text-gray-900">{item.label}</h4>
-                      <p className="text-sm text-gray-600">{item.description}</p>
+                      <h4 className="font-medium text-foreground">{item.label}</h4>
+                      <p className="text-sm text-muted-foreground">{item.description}</p>
                     </div>
                     <Button
                       size="sm"

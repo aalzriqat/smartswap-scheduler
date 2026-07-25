@@ -36,9 +36,9 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
       <Card>
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-2 bg-gray-200 rounded"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-3/4"></div>
+            <div className="h-2 bg-muted rounded"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
           </div>
         </CardContent>
       </Card>
@@ -59,9 +59,9 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
       case 'failed':
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
       case 'expired':
-        return <Pause className="h-4 w-4 text-gray-500" />;
+        return <Pause className="h-4 w-4 text-muted-foreground" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -73,8 +73,8 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
       case 'executing': return 'bg-purple-100 text-purple-800';
       case 'executed': return 'bg-emerald-100 text-emerald-800';
       case 'failed': return 'bg-red-100 text-red-800';
-      case 'expired': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'expired': return 'bg-muted text-foreground';
+      default: return 'bg-muted text-foreground';
     }
   };
 
@@ -129,7 +129,7 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Overall Progress</span>
-            <span className="text-sm text-gray-600">{Math.round(progressPercentage)}%</span>
+            <span className="text-sm text-muted-foreground">{Math.round(progressPercentage)}%</span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
         </div>
@@ -139,7 +139,7 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
           <h3 className="text-sm font-medium mb-3">Participant Approvals</h3>
           <div className="space-y-2">
             {chain.participants.map((participant, index) => (
-              <div key={participant.userId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+              <div key={participant.userId} className="flex items-center justify-between p-2 bg-muted/50 rounded">
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium">
                     {index + 1}
@@ -184,7 +184,7 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
                 className="h-2"
               />
               {executionStatus.lastExecutedAt && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-muted-foreground">
                   Last step: {format(new Date(executionStatus.lastExecutedAt), 'MMM dd, HH:mm')}
                 </div>
               )}
@@ -195,24 +195,24 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
         {/* Chain Details */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-600">Participants:</span>
+            <span className="text-muted-foreground">Participants:</span>
             <div className="font-medium flex items-center space-x-1">
               <Users className="h-3 w-3" />
               <span>{chain.participants.length}</span>
             </div>
           </div>
           <div>
-            <span className="text-gray-600">Chain Score:</span>
+            <span className="text-muted-foreground">Chain Score:</span>
             <div className="font-medium">{chain.chainScore}%</div>
           </div>
           <div>
-            <span className="text-gray-600">Created:</span>
+            <span className="text-muted-foreground">Created:</span>
             <div className="font-medium">
               {format(new Date(chain.createdAt), 'MMM dd, yyyy')}
             </div>
           </div>
           <div>
-            <span className="text-gray-600">Expires:</span>
+            <span className="text-muted-foreground">Expires:</span>
             <div className="font-medium">
               {format(new Date(chain.expiresAt), 'MMM dd, yyyy')}
             </div>
@@ -247,12 +247,12 @@ export const ChainProgressTracker: React.FC<ChainProgressTrackerProps> = ({
         )}
 
         {chain.status === 'expired' && (
-          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="flex items-center space-x-2 text-gray-800">
+          <div className="p-3 bg-muted/50 border border-border rounded-lg">
+            <div className="flex items-center space-x-2 text-foreground">
               <Clock className="h-4 w-4" />
               <span className="text-sm font-medium">Chain expired</span>
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               This chain expired before all participants could approve.
             </p>
           </div>

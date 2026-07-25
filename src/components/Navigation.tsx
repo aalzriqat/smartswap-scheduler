@@ -32,7 +32,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const filteredNavItems = navItems.filter(item => item.roles.includes(userRole));
 
   return (
-    <nav className="bg-white shadow-lg border-b border-blue-100">
+    <nav className="bg-card shadow-lg border-b border-blue-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
@@ -57,7 +57,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                     className={`flex items-center space-x-2 ${
                       activeView === item.id
                         ? 'bg-blue-600 text-white shadow-md'
-                        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                        : 'text-muted-foreground hover:text-blue-600 hover:bg-blue-50'
                     }`}
                   >
                     <Icon className="h-4 w-4" />

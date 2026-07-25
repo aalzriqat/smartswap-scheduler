@@ -285,7 +285,7 @@ export const CreateSwapIntentModal: React.FC<CreateSwapIntentModalProps> = ({
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               maxLength={500}
             />
-            <p className="text-xs text-gray-500">{formData.notes.length}/500 characters</p>
+            <p className="text-xs text-muted-foreground">{formData.notes.length}/500 characters</p>
           </div>
 
           {/* Submit Buttons */}

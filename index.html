@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
     <title>SmartSwap — Intelligent Shift Swapping</title>
     <meta name="description" content="SmartSwap is an intelligent shift-swapping platform for modern workplaces — AI-assisted matching, multi-hop swap chains, and real-time schedules." />
     <meta name="author" content="Abdulkareem Al Zriqat" />
@@ -19,6 +22,18 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Apply saved/system theme before paint to avoid a flash.
+      (function () {
+        try {
+          var t = localStorage.getItem('smartswap-theme');
+          if (t !== 'light' && t !== 'dark') {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          if (t === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -211,7 +211,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Auto-matching</Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Automatically search for matches when you create swap intents
                   </p>
                 </div>
@@ -303,7 +303,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Skill Flexibility</Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Allow matches with different skill requirements
                   </p>
                 </div>
@@ -356,7 +356,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Email Notifications</Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Receive notifications via email
                   </p>
                 </div>
@@ -373,7 +373,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Push Notifications</Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Receive push notifications in your browser
                   </p>
                 </div>
@@ -390,7 +390,7 @@ export const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) =
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>SMS Notifications</Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Receive notifications via SMS (if phone number provided)
                   </p>
                 </div>

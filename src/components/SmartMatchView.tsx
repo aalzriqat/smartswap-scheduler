@@ -159,11 +159,11 @@ export const SmartMatchView: React.FC<SmartMatchViewProps> = ({ userRole }) => {
     return (
       <div className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-3">
+          <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center space-x-3">
             <Zap className="h-8 w-8 text-blue-600" />
             <span>SmartSwap Matchmaking</span>
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             AI-powered shift matching finds the perfect swap partners based on skills, preferences, and availability.
           </p>
         </div>
@@ -171,9 +171,9 @@ export const SmartMatchView: React.FC<SmartMatchViewProps> = ({ userRole }) => {
         <Card className="text-center py-12">
           <CardContent>
             <div className="flex flex-col items-center space-y-4">
-              <Plus className="h-16 w-16 text-gray-400" />
-              <h3 className="text-xl font-semibold text-gray-900">No Active Swap Intents</h3>
-              <p className="text-gray-600 max-w-md">
+              <Plus className="h-16 w-16 text-muted-foreground" />
+              <h3 className="text-xl font-semibold text-foreground">No Active Swap Intents</h3>
+              <p className="text-muted-foreground max-w-md">
                 Create a swap intent to start finding intelligent matches for your shifts.
               </p>
               <Button
@@ -204,11 +204,11 @@ export const SmartMatchView: React.FC<SmartMatchViewProps> = ({ userRole }) => {
       />
 
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-3">
+        <h2 className="text-3xl font-bold text-foreground mb-2 flex items-center space-x-3">
           <Zap className="h-8 w-8 text-blue-600" />
           <span>SmartSwap Matchmaking</span>
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           AI-powered shift matching finds the perfect swap partners based on skills, preferences, and availability.
         </p>
 

@@ -45,7 +45,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
         <div className="flex items-center justify-center mb-4">
-          <LogIn className="h-8 w-8 text-blue-600" />
+          <LogIn className="h-8 w-8 text-primary" />
         </div>
         <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
         <CardDescription className="text-center">
@@ -101,7 +101,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -117,7 +117,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full"
             disabled={isLoggingIn}
           >
             {isLoggingIn ? (
@@ -131,22 +131,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           </Button>
 
           {/* Demo Credentials Section */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <h4 className="text-sm font-medium text-blue-800 mb-2">Demo Accounts</h4>
-            <div className="text-xs text-blue-700 space-y-1">
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-4">
+            <h4 className="text-sm font-medium text-foreground mb-2">Demo Accounts</h4>
+            <div className="text-xs text-muted-foreground space-y-1">
               <p><strong>Employee:</strong> employee@smartswap.app</p>
               <p><strong>Manager:</strong> manager@smartswap.app</p>
-              <p className="text-blue-600 mt-2 font-medium">Password for both: password123</p>
+              <p className="text-primary mt-2 font-medium">Password for both: password123</p>
             </div>
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Don't have an account?{' '}
               <button
                 type="button"
                 onClick={onSwitchToRegister}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-primary hover:text-primary/80 font-medium"
               >
                 Sign up
               </button>
