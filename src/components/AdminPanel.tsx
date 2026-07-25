@@ -82,7 +82,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
     }
   };
 
-  if (userRole !== 'WorkFlowManagement' && userRole !== 'Developer') {
+  if (userRole !== 'Manager' && userRole !== 'WorkFlowManagement' && userRole !== 'Developer') {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <Card className="text-center">
@@ -101,19 +101,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-3">
           <Settings className="h-8 w-8 text-blue-600" />
-          <span>Admin Panel</span>
+          <span>Team Management</span>
         </h2>
         <p className="text-gray-600">
-          System administration, user management, and developer tools for SmartSwap.
+          Manage your team, monitor coverage, and review swap activity across SmartSwap.
         </p>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className={`grid w-full ${(userRole === 'WorkFlowManagement' || userRole === 'Developer') ? 'grid-cols-4' : 'grid-cols-3'}`}>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="system">System Health</TabsTrigger>
-          <TabsTrigger value="developer">Developer Tools</TabsTrigger>
+          {(userRole === 'WorkFlowManagement' || userRole === 'Developer') && (
+            <TabsTrigger value="developer">Developer Tools</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -165,29 +167,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userRole }) => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recent System Activity</CardTitle>
-              <CardDescription>Latest system events and operations</CardDescription>
+              <CardTitle>Team Composition</CardTitle>
+              <CardDescription>Your team members by role</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {[
-                  { time: '2 minutes ago', event: 'Database backup completed', type: 'success' },
-                  { time: '15 minutes ago', event: 'New user registration: John Smith', type: 'info' },
-                  { time: '1 hour ago', event: 'System update deployed successfully', type: 'success' },
-                  { time: '2 hours ago', event: 'High memory usage detected', type: 'warning' },
-                ].map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        activity.type === 'success' ? 'bg-green-500' :
-                        activity.type === 'warning' ? 'bg-yellow-500' :
-                        'bg-blue-500'
-                      }`}></div>
-                      <span className="text-sm text-gray-900">{activity.event}</span>
+                {['Employee', 'Manager', 'WorkFlowManagement', 'Developer'].map((role) => {
+                  const count = (users || []).filter((u) => u.role === role).length;
+                  if (count === 0) return null;
+                  return (
+                    <div key={role} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-900">{role}</span>
+                      <span className="text-sm font-semibold text-gray-700">{count}</span>
                     </div>
-                    <span className="text-xs text-gray-500">{activity.time}</span>
-                  </div>
-                ))}
+                  );
+                })}
+                {(!users || users.length === 0) && (
+                  <p className="text-sm text-gray-500">No team members yet.</p>
+                )}
               </div>
             </CardContent>
           </Card>

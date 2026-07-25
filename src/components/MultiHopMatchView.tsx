@@ -16,29 +16,35 @@ import {
 } from 'lucide-react';
 import { SwapChain, SmartMatch, SwapIntent } from '@/types/api';
 import { useSwapChains } from '@/hooks/useSwapChains';
+import { useSwapIntents } from '@/hooks/useSwapIntents';
 import { ChainVisualization } from './ChainVisualization';
 import { ChainApprovalModal } from './ChainApprovalModal';
 
 interface MultiHopMatchViewProps {
-  intent: SwapIntent;
-  directMatches: SmartMatch[];
-  onSelectMatch: (match: SmartMatch) => void;
+  intent?: SwapIntent;
+  directMatches?: SmartMatch[];
+  onSelectMatch?: (match: SmartMatch) => void;
 }
 
 export const MultiHopMatchView: React.FC<MultiHopMatchViewProps> = ({
   intent,
-  directMatches,
-  onSelectMatch,
+  directMatches = [],
+  onSelectMatch = () => {},
 }) => {
   const [selectedChain, setSelectedChain] = useState<SwapChain | null>(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
   const [detectedChains, setDetectedChains] = useState<SwapChain[]>([]);
   const { detectChains, isDetecting } = useSwapChains();
+  // When rendered as a standalone tab (no intent prop), fall back to the
+  // user's first active swap intent.
+  const { activeIntents } = useSwapIntents();
+  const activeIntent = intent ?? activeIntents[0];
 
   const handleDetectChains = () => {
+    if (!activeIntent?._id) return;
     detectChains(
-      { 
-        intentId: intent._id,
+      {
+        intentId: activeIntent._id,
         options: {
           maxChainLength: 5,
           minChainScore: 60,

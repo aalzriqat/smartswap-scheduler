@@ -1,133 +1,112 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { swapChainApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { SwapChain } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
+
+const MANAGER_ROLES = ['WorkFlowManagement', 'Developer', 'Manager'];
 
 export const useSwapChains = () => {
   const { user, userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get user's swap chains
+  // Get the current user's swap chains
   const {
     data: userChains = [],
     isLoading: isLoadingUserChains,
-    error: userChainsError
+    error: userChainsError,
   } = useQuery({
     queryKey: ['userChains', userProfile?.id],
     queryFn: async () => {
       if (!userProfile?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('swap_chains')
-        .select('*')
-        .contains('participants', [{ userId: userProfile.id }]);
-      
-      if (error) throw error;
-      return data as SwapChain[];
+      const res = await swapChainApi.getUserSwapChains(userProfile.id);
+      return (res.data?.chains || []) as SwapChain[];
     },
     enabled: !!userProfile?.id,
   });
 
-  // Get active swap chains (for admin/managers)
+  // Get active swap chains (for managers/admins)
+  const isManagerRole = !!user?.role && MANAGER_ROLES.includes(user.role);
   const {
     data: activeChains = [],
     isLoading: isLoadingActiveChains,
-    error: activeChainsError
+    error: activeChainsError,
   } = useQuery({
     queryKey: ['activeChains'],
     queryFn: async () => {
-      if (!user?.role || !['WorkFlowManagement', 'Developer', 'Manager'].includes(user.role)) return [];
-      
-      const { data, error } = await supabase
-        .from('swap_chains')
-        .select('*')
-        .in('status', ['proposed', 'pending', 'approved', 'executing'])
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as SwapChain[];
+      const res = await swapChainApi.getActiveSwapChains();
+      return (res.data?.chains || []) as SwapChain[];
     },
-    enabled: !!user?.role && ['WorkFlowManagement', 'Developer', 'Manager'].includes(user.role),
+    enabled: isManagerRole,
   });
 
-  // Execute a swap chain
   const [executionStatus, setExecutionStatus] = useState<{
     chainId: string;
     executedSteps: number;
     totalSteps: number;
     lastExecutedAt?: string;
   } | null>(null);
-  
+
   const { mutate: executeChain, isLoading: isExecuting } = useMutation({
     mutationFn: async (chainId: string) => {
-      if (!userProfile?.id) throw new Error('User not authenticated');
-      
-      // Optimistically update the chain status
-      queryClient.setQueryData(['userChains', userProfile.id], (old: SwapChain[] | undefined) => {
-        return old?.map(chain => chain.chainId === chainId ? { ...chain, status: 'executing' } : chain);
-      });
-
-      // Simulate chain execution (replace with actual logic)
-      const chainToExecute = userChains.find(chain => chain.chainId === chainId);
-      if (!chainToExecute) throw new Error('Chain not found');
-
-      const totalSteps = chainToExecute.swapSteps.length;
-      let executedSteps = 0;
-      let lastExecutedAt: string | undefined = undefined;
-
+      const res = await swapChainApi.executeSwapChain(chainId);
       setExecutionStatus({
-        chainId: chainId,
-        executedSteps: 0,
-        totalSteps: totalSteps,
+        chainId,
+        executedSteps: res.data?.executedSteps ?? 0,
+        totalSteps: res.data?.totalSteps ?? 0,
+        lastExecutedAt: new Date().toISOString(),
       });
-
-      for (const step of chainToExecute.swapSteps) {
-        // Simulate step execution delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        executedSteps++;
-        lastExecutedAt = new Date().toISOString();
-
-        setExecutionStatus(prev => {
-          if (!prev) return { chainId: chainId, executedSteps: 1, totalSteps: totalSteps, lastExecutedAt: lastExecutedAt };
-          return { ...prev, executedSteps: executedSteps, lastExecutedAt: lastExecutedAt };
-        });
-      }
-
-      // Update chain status to 'executed'
-      const { data, error } = await supabase
-        .from('swap_chains')
-        .update({ status: 'executed' })
-        .eq('chain_id', chainId);
-      
-      if (error) throw error;
-
-      toast({
-        title: 'Chain executed',
-        description: `Successfully executed chain ${chainId}`,
-      });
-      
-      return data;
+      toast({ title: 'Chain executed', description: `Successfully executed chain ${chainId}` });
+      return res.data;
     },
     onSuccess: () => {
-      // Invalidate and refetch swap chains
       queryClient.invalidateQueries(['userChains', userProfile?.id]);
       queryClient.invalidateQueries(['activeChains']);
     },
     onError: (error: any) => {
-      console.error('Chain execution error:', error);
-      toast({
-        title: 'Chain execution failed',
-        description: error.message || 'An error occurred during chain execution',
-        variant: 'destructive',
-      });
+      toast({ title: 'Chain execution failed', description: error.message || 'An error occurred.', variant: 'destructive' });
     },
-    onSettled: () => {
-      setExecutionStatus(null);
-    }
+    onSettled: () => setExecutionStatus(null),
+  });
+
+  const { mutate: detectChains, isLoading: isDetecting } = useMutation({
+    mutationFn: async ({ intentId, options }: { intentId: string; options?: any }) => {
+      const res = await swapChainApi.detectSwapChains(intentId, options);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['userChains', userProfile?.id]);
+      toast({ title: 'Chain detection complete', description: `Found ${data?.totalFound ?? 0} possible chain(s).` });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Chain detection failed', description: error.message || 'An error occurred.', variant: 'destructive' });
+    },
+  });
+
+  const { mutate: approveChain, isLoading: isApproving } = useMutation({
+    mutationFn: async ({ chainId, reason }: { chainId: string; reason?: string }) => {
+      const res = await swapChainApi.approveChainParticipation(chainId, reason);
+      toast({ title: 'Chain approved', description: `You have approved chain ${chainId}` });
+      return res.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries(['userChains', userProfile?.id]),
+    onError: (error: any) => {
+      toast({ title: 'Chain approval failed', description: error.message || 'An error occurred.', variant: 'destructive' });
+    },
+  });
+
+  const { mutate: rejectChain, isLoading: isRejecting } = useMutation({
+    mutationFn: async ({ chainId, reason }: { chainId: string; reason: string }) => {
+      const res = await swapChainApi.rejectChainParticipation(chainId, reason);
+      toast({ title: 'Chain rejected', description: `You have rejected chain ${chainId}` });
+      return res.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries(['userChains', userProfile?.id]),
+    onError: (error: any) => {
+      toast({ title: 'Chain rejection failed', description: error.message || 'An error occurred.', variant: 'destructive' });
+    },
   });
 
   return {
@@ -138,21 +117,26 @@ export const useSwapChains = () => {
     executeChain,
     isExecuting,
     executionStatus,
+    detectChains,
+    isDetecting,
+    approveChain,
+    rejectChain,
+    isApproving,
+    isRejecting,
   };
 };
 
 export const useChainApprovals = () => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { userChains } = useSwapChains();
 
   const pendingApprovals = userChains.filter(
     (chain) =>
-      chain.status === 'proposed' || chain.status === 'pending' &&
+      (chain.status === 'proposed' || chain.status === 'pending') &&
       chain.participants.some(
-        (participant) =>
-          participant.userId === userProfile?.id && participant.approvalStatus === 'pending'
+        (participant) => participant.userId === userProfile?.id && participant.approvalStatus === 'pending'
       )
   );
 
@@ -160,8 +144,7 @@ export const useChainApprovals = () => {
     (chain) =>
       chain.status !== 'proposed' && chain.status !== 'pending' &&
       chain.participants.some(
-        (participant) =>
-          participant.userId === userProfile?.id && participant.approvalStatus === 'approved'
+        (participant) => participant.userId === userProfile?.id && participant.approvalStatus === 'approved'
       )
   );
 
@@ -169,8 +152,7 @@ export const useChainApprovals = () => {
     (chain) =>
       chain.status !== 'proposed' && chain.status !== 'pending' &&
       chain.participants.some(
-        (participant) =>
-          participant.userId === userProfile?.id && participant.approvalStatus === 'rejected'
+        (participant) => participant.userId === userProfile?.id && participant.approvalStatus === 'rejected'
       )
   );
 
@@ -178,117 +160,25 @@ export const useChainApprovals = () => {
 
   const { mutate: approveChain, isLoading: isApproving } = useMutation({
     mutationFn: async ({ chainId, reason }: { chainId: string; reason?: string }) => {
-      if (!userProfile?.id) throw new Error('User not authenticated');
-
-      // Optimistically update the approval status
-      queryClient.setQueryData(['userChains', userProfile.id], (old: SwapChain[] | undefined) => {
-        return old?.map(chain => {
-          if (chain.chainId === chainId) {
-            return {
-              ...chain,
-              participants: chain.participants.map(participant => {
-                if (participant.userId === userProfile.id) {
-                  return { ...participant, approvalStatus: 'approved', approvedAt: new Date().toISOString() };
-                }
-                return participant;
-              })
-            };
-          }
-          return chain;
-        });
-      });
-
-      // Update approval status in the database
-      const { data, error } = await supabase
-        .from('swap_chains')
-        .update({
-          participants: userChains.find(chain => chain.chainId === chainId)?.participants.map(participant => {
-            if (participant.userId === userProfile.id) {
-              return { ...participant, approvalStatus: 'approved', approvedAt: new Date().toISOString() };
-            }
-            return participant;
-          })
-        })
-        .eq('chain_id', chainId);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Chain approved',
-        description: `You have approved chain ${chainId}`,
-      });
-
-      return data;
+      const res = await swapChainApi.approveChainParticipation(chainId, reason);
+      toast({ title: 'Chain approved', description: `You have approved chain ${chainId}` });
+      return res.data;
     },
-    onSuccess: () => {
-      // Invalidate and refetch swap chains
-      queryClient.invalidateQueries(['userChains', userProfile?.id]);
-    },
+    onSuccess: () => queryClient.invalidateQueries(['userChains', userProfile?.id]),
     onError: (error: any) => {
-      console.error('Chain approval error:', error);
-      toast({
-        title: 'Chain approval failed',
-        description: error.message || 'An error occurred during chain approval',
-        variant: 'destructive',
-      });
+      toast({ title: 'Chain approval failed', description: error.message || 'An error occurred.', variant: 'destructive' });
     },
   });
 
   const { mutate: rejectChain, isLoading: isRejecting } = useMutation({
     mutationFn: async ({ chainId, reason }: { chainId: string; reason: string }) => {
-      if (!userProfile?.id) throw new Error('User not authenticated');
-
-      // Optimistically update the approval status
-      queryClient.setQueryData(['userChains', userProfile.id], (old: SwapChain[] | undefined) => {
-        return old?.map(chain => {
-          if (chain.chainId === chainId) {
-            return {
-              ...chain,
-              participants: chain.participants.map(participant => {
-                if (participant.userId === userProfile.id) {
-                  return { ...participant, approvalStatus: 'rejected', rejectedAt: new Date().toISOString(), rejectionReason: reason };
-                }
-                return participant;
-              })
-            };
-          }
-          return chain;
-        });
-      });
-
-      // Update approval status in the database
-      const { data, error } = await supabase
-        .from('swap_chains')
-        .update({
-          participants: userChains.find(chain => chain.chainId === chainId)?.participants.map(participant => {
-            if (participant.userId === userProfile.id) {
-              return { ...participant, approvalStatus: 'rejected', rejectedAt: new Date().toISOString(), rejectionReason: reason };
-            }
-            return participant;
-          })
-        })
-        .eq('chain_id', chainId);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Chain rejected',
-        description: `You have rejected chain ${chainId}`,
-      });
-
-      return data;
+      const res = await swapChainApi.rejectChainParticipation(chainId, reason);
+      toast({ title: 'Chain rejected', description: `You have rejected chain ${chainId}` });
+      return res.data;
     },
-    onSuccess: () => {
-      // Invalidate and refetch swap chains
-      queryClient.invalidateQueries(['userChains', userProfile?.id]);
-    },
+    onSuccess: () => queryClient.invalidateQueries(['userChains', userProfile?.id]),
     onError: (error: any) => {
-      console.error('Chain rejection error:', error);
-      toast({
-        title: 'Chain rejection failed',
-        description: error.message || 'An error occurred during chain rejection',
-        variant: 'destructive',
-      });
+      toast({ title: 'Chain rejection failed', description: error.message || 'An error occurred.', variant: 'destructive' });
     },
   });
 
@@ -305,10 +195,10 @@ export const useChainApprovals = () => {
 };
 
 export const useSwapChain = (chainId: string) => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const { userChains, executionStatus } = useSwapChains();
 
-  const chain = userChains.find((chain) => chain.chainId === chainId);
+  const chain = userChains.find((c) => c.chainId === chainId);
   const isLoading = !chain && !!userProfile?.id;
 
   return {

@@ -20,11 +20,13 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const navItems = [
+    // Personal shift-swapping tools — employees only. Managers oversee, they don't swap.
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, roles: ['Employee', 'WorkFlowManagement', 'Manager', 'Developer'] },
-    { id: 'schedule', label: 'Schedule', icon: Calendar, roles: ['Employee', 'WorkFlowManagement', 'Manager', 'Developer'] },
-    { id: 'smartmatch', label: 'SmartSwap', icon: Zap, roles: ['Employee', 'WorkFlowManagement', 'Manager', 'Developer'] },
+    { id: 'schedule', label: 'My Schedule', icon: Calendar, roles: ['Employee'] },
+    { id: 'smartmatch', label: 'SmartSwap', icon: Zap, roles: ['Employee'] },
+    // Management tools — managers and above.
     { id: 'analytics', label: 'Analytics', icon: BarChart3, roles: ['WorkFlowManagement', 'Manager', 'Developer'] },
-    { id: 'admin', label: 'Workflow Management', icon: Settings, roles: ['WorkFlowManagement', 'Developer'] },
+    { id: 'admin', label: 'Team', icon: Settings, roles: ['WorkFlowManagement', 'Manager', 'Developer'] },
   ];
 
   const filteredNavItems = navItems.filter(item => item.roles.includes(userRole));

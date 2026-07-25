@@ -70,7 +70,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               {...register('email', {
                 required: 'Email is required',
                 pattern: {
-                  value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+                  value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/,
                   message: 'Please enter a valid email address',
                 },
               })}
@@ -134,11 +134,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <h4 className="text-sm font-medium text-blue-800 mb-2">Demo Accounts</h4>
             <div className="text-xs text-blue-700 space-y-1">
-              <p><strong>Employee:</strong> employee@smartswap.local</p>
-              <p><strong>Manager:</strong> manager@smartswap.local</p>
-              <p><strong>Admin:</strong> admin@smartswap.local</p>
-              <p><strong>Developer:</strong> developer@smartswap.local</p>
-              <p className="text-blue-600 mt-2 font-medium">Password for all: password123</p>
+              <p><strong>Employee:</strong> employee@smartswap.app</p>
+              <p><strong>Manager:</strong> manager@smartswap.app</p>
+              <p className="text-blue-600 mt-2 font-medium">Password for both: password123</p>
             </div>
           </div>
 

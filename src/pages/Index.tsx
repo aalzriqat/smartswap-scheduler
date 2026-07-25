@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Dashboard } from '@/components/Dashboard';
+import { ManagerDashboard } from '@/components/ManagerDashboard';
+import { TeamView } from '@/components/TeamView';
 import { ScheduleView } from '@/components/ScheduleView';
 import { AnalyticsView } from '@/components/AnalyticsView';
 import { AdminPanel } from '@/components/AdminPanel';
@@ -56,10 +58,13 @@ const Index = () => {
 
   const renderActiveView = () => {
     const userRole = user?.role || 'Employee';
+    const isManagerRole = ['Manager', 'WorkFlowManagement', 'Developer'].includes(userRole);
 
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard userRole={userRole} />;
+        return isManagerRole
+          ? <ManagerDashboard onNavigate={handleViewChange} />
+          : <Dashboard userRole={userRole} />;
       case 'schedule':
         return <ScheduleView userRole={userRole} />;
       case 'smartmatch':
@@ -67,7 +72,10 @@ const Index = () => {
       case 'analytics':
         return <AnalyticsView userRole={userRole} />;
       case 'admin':
-        return <AdminPanel userRole={userRole} />;
+        // Managers get the team-coverage page; developers keep the admin panel.
+        return userRole === 'Developer'
+          ? <AdminPanel userRole={userRole} />
+          : <TeamView />;
       default:
         return <Dashboard userRole={userRole} />;
     }

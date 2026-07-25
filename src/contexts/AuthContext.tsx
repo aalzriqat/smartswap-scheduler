@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { authApi } from '@/services/api';
+import { User as ApiUser } from '@/types/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfile {
@@ -14,22 +14,33 @@ interface UserProfile {
   email: string;
 }
 
+// Map the backend User shape (camelCase, _id) onto the UserProfile the UI expects.
+const toProfile = (u: ApiUser): UserProfile => ({
+  id: u._id,
+  first_name: u.firstName,
+  last_name: u.lastName,
+  role: u.role,
+  skills: u.skills || [],
+  marketplace: u.marketplace,
+  email: u.email,
+});
+
 interface AuthContextType {
-  user: User | null;
+  user: ApiUser | null;
   userProfile: UserProfile | null;
   isLoading: boolean;
   isLoggingIn: boolean;
   isRegistering: boolean;
   isAuthenticated: boolean;
   login: (data: { email: string; password: string }, options?: { onError?: (error: Error) => void }) => Promise<void>;
-  register: (userData: { 
-    email: string; 
-    password: string; 
-    firstName: string; 
-    lastName: string; 
-    role: string; 
-    skills: string[]; 
-    marketplace: string; 
+  register: (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    skills: string[];
+    marketplace: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   hasRole: (roles: string | string[]) => boolean;
@@ -50,83 +61,46 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ApiUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { toast } = useToast();
 
-  // Check authentication status on mount
+  // Restore the session from a stored JWT on mount.
   useEffect(() => {
     const initializeAuth = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          setUser(session.user);
-          // Fetch user profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            setUserProfile(profile);
-          }
+        const res = await authApi.getCurrentUser();
+        if (res.data) {
+          setUser(res.data);
+          setUserProfile(toProfile(res.data));
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
+        localStorage.removeItem('authToken');
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
-      
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Fetch user profile when user signs in
-        setTimeout(async () => {
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (profile) {
-              setUserProfile(profile);
-            }
-          } catch (error) {
-            console.error('Error fetching profile:', error);
-          }
-        }, 0);
-      } else {
-        setUserProfile(null);
-      }
-      
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (data: { email: string; password: string }, options?: { onError?: (error: Error) => void }) => {
     setIsLoggingIn(true);
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (error) throw error;
+      const res = await authApi.login(data.email, data.password);
+      const { user: apiUser, token } = res.data;
+      localStorage.setItem('authToken', token);
+      setUser(apiUser);
+      setUserProfile(toProfile(apiUser));
 
       toast({
         title: 'Login successful',
@@ -149,39 +123,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (userData: { 
-    email: string; 
-    password: string; 
-    firstName: string; 
-    lastName: string; 
-    role: string; 
-    skills: string[]; 
-    marketplace: string; 
+  const register = async (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    skills: string[];
+    marketplace: string;
   }) => {
     setIsRegistering(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-            role: userData.role,
-            skills: userData.skills,
-            marketplace: userData.marketplace,
-          }
-        }
-      });
-
-      if (error) throw error;
+      const res = await authApi.register(userData as unknown as Partial<ApiUser>);
+      const { user: apiUser, token } = res.data;
+      if (token) localStorage.setItem('authToken', token);
+      if (apiUser) {
+        setUser(apiUser);
+        setUserProfile(toProfile(apiUser));
+      }
 
       toast({
         title: 'Registration successful',
-        description: 'Welcome to SmartSwap! Please check your email to confirm your account.',
+        description: 'Welcome to SmartSwap!',
       });
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -198,21 +161,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await authApi.logout().catch(() => {});
+    } finally {
+      localStorage.removeItem('authToken');
       setUser(null);
       setUserProfile(null);
       toast({
         title: 'Logged out',
         description: 'You have been successfully logged out.',
-      });
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      toast({
-        title: 'Logout failed',
-        description: error.message || 'An error occurred during logout',
-        variant: 'destructive',
       });
     }
   };
